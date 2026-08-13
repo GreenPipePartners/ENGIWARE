@@ -1,6 +1,7 @@
 import { Prompt, type PromptRef } from "../component/prompt"
 import { createEffect, createMemo, createSignal, onMount, Show, untrack } from "solid-js"
 import { Logo } from "../component/logo"
+import { EngiwareLogo } from "../component/engiware-logo"
 import { useArgs } from "../context/args"
 import { useRouteData } from "../context/route"
 import { usePromptRef } from "../context/prompt"
@@ -81,6 +82,10 @@ export function Home() {
       >
         <box flexGrow={1} minHeight={0} />
         <box height={4} minHeight={0} flexShrink={1} />
+        <box flexShrink={0}>
+          <EngiwareLogo />
+        </box>
+        <box height={1} minHeight={0} flexShrink={1} />
         <box flexShrink={0}>
           <Logo />
         </box>

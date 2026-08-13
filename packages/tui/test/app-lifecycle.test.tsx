@@ -113,6 +113,11 @@ test("session lifecycle updates the terminal title and prints the epilogue after
     )
 
     await initialTitleSet
+    await Bun.sleep(20)
+    const frame = setup.captureCharFrame()
+    expect(frame).toContain("Navigation")
+    expect(frame).toContain("Engineering Display")
+    expect(frame).toContain("Context")
     events.emit({
       id: "evt_renamed",
       created: 1,

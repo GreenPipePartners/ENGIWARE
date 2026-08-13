@@ -145,6 +145,50 @@ async function runPromptRollbackMutation<T, R>(input: {
     })
 }
 
+export function SessionPage() {
+  const language = useLanguage()
+  return (
+    <div
+      data-component="engiware-session-layout"
+      class="grid size-full min-h-0 min-w-0 grid-rows-[minmax(0,3fr)_minmax(16rem,1fr)] overflow-hidden bg-v2-background-bg-deep"
+    >
+      <div class="grid min-h-0 min-w-0 grid-cols-1 gap-2 p-2 md:grid-cols-[minmax(10rem,1fr)_minmax(0,3fr)_minmax(10rem,1fr)]">
+        <section
+          data-slot="projects"
+          class="hidden min-h-0 min-w-0 flex-col rounded-[10px] border-[0.5px] border-v2-border-border-muted bg-v2-background-bg-base md:flex"
+        >
+          <header class="shrink-0 border-b-[0.5px] border-v2-border-border-muted px-3 py-2 text-[13px] font-[530] text-v2-text-text-muted">
+            {language.t("home.projects")}
+          </header>
+        </section>
+        <section
+          data-slot="workspace"
+          class="flex min-h-0 min-w-0 flex-col rounded-[10px] border-[0.5px] border-v2-border-border-muted bg-v2-background-bg-base"
+        >
+          <header class="flex shrink-0 items-center gap-2 border-b-[0.5px] border-v2-border-border-muted px-3 py-2 text-[13px] font-[530] text-v2-text-text-base">
+            <span>Engiware</span>
+            <span class="text-v2-text-text-muted">{language.t("command.category.workspace")}</span>
+          </header>
+        </section>
+        <section
+          data-slot="context"
+          class="hidden min-h-0 min-w-0 flex-col rounded-[10px] border-[0.5px] border-v2-border-border-muted bg-v2-background-bg-base md:flex"
+        >
+          <header class="shrink-0 border-b-[0.5px] border-v2-border-border-muted px-3 py-2 text-[13px] font-[530] text-v2-text-text-muted">
+            {language.t("session.tab.context")}
+          </header>
+        </section>
+      </div>
+      <div
+        data-slot="session"
+        class="min-h-0 min-w-0 overflow-hidden border-t-[0.5px] border-v2-border-border-muted"
+      >
+        <Page />
+      </div>
+    </div>
+  )
+}
+
 // Rendered under app.tsx's TargetSessionRoute, which owns the per-server keyed
 // remount around the server-scoped providers. Nothing here may key on the
 // session ID: session tabs on the same server share this route instance, and
@@ -284,7 +328,7 @@ function TargetSessionPage() {
         <FileProvider>
           <PromptProvider>
             <CommentsProvider>
-              <Page />
+              <SessionPage />
             </CommentsProvider>
           </PromptProvider>
         </FileProvider>

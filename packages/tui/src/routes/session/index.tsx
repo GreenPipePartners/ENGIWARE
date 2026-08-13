@@ -108,6 +108,7 @@ import type { SessionInbox } from "@opencode-ai/schema/session-inbox"
 import { generateThinkingSyntax } from "./thinking-syntax"
 import { createDelayedPresence } from "../../util/delayed-presence"
 import { SessionLocationMissing } from "./location-missing"
+import { EngiwareShell } from "../../engiware/shell/engiware-shell"
 
 addDefaultParsers(parsers.parsers)
 
@@ -1140,16 +1141,25 @@ export function Session(props: { verticalTabsWidth: number }) {
         pendingDelivery: (inboxID) => pendingDeliveries().get(inboxID),
       }}
     >
-      <box flexDirection="row" flexGrow={1} minHeight={0}>
+      <box flexGrow={1} minHeight={0}>
+        <EngiwareShell sessionID={route.sessionID} />
         <box
+          flexDirection="row"
           flexGrow={1}
+          flexBasis={0}
           minHeight={0}
-          paddingBottom={1}
-          paddingLeft={dimensions().width < 44 ? 1 : 2}
-          paddingRight={dimensions().width < 44 ? 1 : 2}
+          border={["top"]}
+          borderColor={theme.border.default}
         >
-          <Show when={session()}>
-            <box flexGrow={1} minHeight={0} position="relative">
+          <box
+            flexGrow={1}
+            minHeight={0}
+            paddingBottom={1}
+            paddingLeft={dimensions().width < 44 ? 1 : 2}
+            paddingRight={dimensions().width < 44 ? 1 : 2}
+          >
+            <Show when={session()}>
+              <box flexGrow={1} minHeight={0} position="relative">
               <scrollbox
                 ref={(r) => (scroll = r)}
                 viewportOptions={{
@@ -1268,28 +1278,29 @@ export function Session(props: { verticalTabsWidth: number }) {
                 </Match>
               </Switch>
             </box>
+            </Show>
+          </box>
+          <Show when={sidebarVisible()}>
+            <Switch>
+              <Match when={wide()}>
+                <Sidebar sessionID={route.sessionID} />
+              </Match>
+              <Match when={!wide()}>
+                <box
+                  position="absolute"
+                  top={0}
+                  left={0}
+                  right={0}
+                  bottom={0}
+                  alignItems="flex-end"
+                  backgroundColor={RGBA.fromInts(0, 0, 0, 70)}
+                >
+                  <Sidebar sessionID={route.sessionID} />
+                </box>
+              </Match>
+            </Switch>
           </Show>
         </box>
-        <Show when={sidebarVisible()}>
-          <Switch>
-            <Match when={wide()}>
-              <Sidebar sessionID={route.sessionID} />
-            </Match>
-            <Match when={!wide()}>
-              <box
-                position="absolute"
-                top={0}
-                left={0}
-                right={0}
-                bottom={0}
-                alignItems="flex-end"
-                backgroundColor={RGBA.fromInts(0, 0, 0, 70)}
-              >
-                <Sidebar sessionID={route.sessionID} />
-              </box>
-            </Match>
-          </Switch>
-        </Show>
       </box>
     </context.Provider>
   )
