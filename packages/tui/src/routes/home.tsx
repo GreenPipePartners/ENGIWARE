@@ -12,6 +12,9 @@ import { useLocation } from "../context/location"
 import { FormPrompt } from "./session/form"
 import { Slot } from "../plugin/render"
 import { useTerminalDimensions } from "@opentui/solid"
+import { EngiwareShell } from "../engiware/shell/engiware-shell"
+import { useEngiwareApplication } from "../engiware/application/provider"
+import { EngiwareCommands } from "../engiware/application/commands"
 
 let once = false
 const placeholder = {
@@ -29,6 +32,7 @@ export function Home() {
   const data = useData()
   const location = useLocation()
   const dimensions = useTerminalDimensions()
+  const engiware = useEngiwareApplication()
   // Global MCP elicitations can arrive without a session route, so keep them reachable from Home.
   const currentLocation = () => route.location ?? data.location.default()
   const forms = createMemo(() => data.session.form.list("global", currentLocation()) ?? [])
@@ -74,26 +78,50 @@ export function Home() {
 
   return (
     <>
+      <EngiwareCommands baseDirectory={location.ref?.directory ?? currentLocation().directory} />
       <box
         flexGrow={1}
-        alignItems="center"
+        minHeight={0}
         paddingLeft={dimensions().width < 44 ? 1 : 2}
         paddingRight={dimensions().width < 44 ? 1 : 2}
       >
-        <box flexGrow={1} minHeight={0} />
-        <box height={4} minHeight={0} flexShrink={1} />
-        <box flexShrink={0}>
-          <EngiwareLogo />
+        <Show
+          when={
+            engiware.model.view === "plc" || engiware.model.view === "ignition" || engiware.model.view === "engibook"
+          }
+        >
+          <EngiwareShell sessionID="home" composerDisabled={forms().length > 0} availableWidth={dimensions().width} />
+        </Show>
+        <Show
+          when={
+            engiware.model.view !== "plc" && engiware.model.view !== "ignition" && engiware.model.view !== "engibook"
+          }
+        >
+          <box flexGrow={1} minHeight={0} />
+          <box height={4} minHeight={0} flexShrink={1} />
+          <box alignSelf="center" flexShrink={0}>
+            <EngiwareLogo />
+          </box>
+          <box height={1} minHeight={0} flexShrink={1} />
+          <box alignSelf="center" flexShrink={0}>
+            <Logo />
+          </box>
+        </Show>
+        <box width="100%" maxWidth={75} alignSelf="center" zIndex={1000} paddingTop={1} flexShrink={0}>
+          <Prompt
+            ref={bind}
+            placeholders={placeholder}
+            disabled={forms().length > 0}
+            onSubmit={(input, mode) => mode === "normal" && engiware.actions.observePrompt(input)}
+          />
         </box>
-        <box height={1} minHeight={0} flexShrink={1} />
-        <box flexShrink={0}>
-          <Logo />
-        </box>
-        <box height={1} minHeight={0} flexShrink={1} />
-        <box width="100%" maxWidth={75} zIndex={1000} paddingTop={1} flexShrink={0}>
-          <Prompt ref={bind} placeholders={placeholder} disabled={forms().length > 0} />
-        </box>
-        <box flexGrow={1} minHeight={0} />
+        <Show
+          when={
+            engiware.model.view !== "plc" && engiware.model.view !== "ignition" && engiware.model.view !== "engibook"
+          }
+        >
+          <box flexGrow={1} minHeight={0} />
+        </Show>
       </box>
       <box width="100%" flexShrink={0}>
         <Slot path="home.footer" />

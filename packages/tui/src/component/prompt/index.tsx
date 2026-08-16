@@ -77,7 +77,7 @@ export type PromptProps = {
   sessionID?: string
   visible?: boolean
   disabled?: boolean
-  onSubmit?: () => void
+  onSubmit?: (input: string, mode: "normal" | "shell") => void
   onEmptySubmit?: () => boolean | Promise<boolean>
   ref?: (ref: PromptRef | undefined) => void
   hint?: JSX.Element
@@ -1152,6 +1152,7 @@ export function Prompt(props: PromptProps) {
       toast.show({ message: "Editor context cannot be queued", variant: "warning" })
       return false
     }
+    const currentMode = store.mode
     const agent = local.agent.current()
     if (!agent) return false
     const selection = local.model.selection()
@@ -1159,7 +1160,7 @@ export function Prompt(props: PromptProps) {
       void promptModelWarning()
       return false
     }
-    const usesModel = !props.sessionID || (store.mode !== "shell" && !isSkill)
+    const usesModel = !props.sessionID || (currentMode !== "shell" && !isSkill)
     if (usesModel && !local.model.available(selection)) {
       toast.show({
         title: "Model unavailable",
@@ -1208,9 +1209,7 @@ export function Prompt(props: PromptProps) {
       session = created
     }
 
-    // Capture mode before it gets reset
-    const currentMode = store.mode
-    if (store.mode === "shell") {
+    if (currentMode === "shell") {
       move.startSubmit()
       void client.api.session.shell({
         sessionID,
@@ -1318,7 +1317,7 @@ export function Prompt(props: PromptProps) {
     input.extmarks.clear()
     setStore("prompt", emptyPrompt())
     setStore("extmarkToPart", new Map())
-    props.onSubmit?.()
+    props.onSubmit?.(inputText, currentMode)
 
     // temporary hack to make sure the message is sent
     if (!props.sessionID) {

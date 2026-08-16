@@ -1,9 +1,11 @@
 import { expect, test } from "bun:test"
 import { createTestRenderer } from "@opentui/core/testing"
+import { TextareaRenderable } from "@opentui/core"
 import { Effect, FileSystem } from "effect"
 import { AppNodeBuilder } from "@opencode-ai/core/effect/app-node-builder"
 import { Global } from "@opencode-ai/util/global"
 import { createEventStream, createFetch, directory, json } from "./fixture/tui-client"
+import { createFakeEngibookClient } from "./engiware/fixture"
 
 test("SIGHUP clears title and disposes scoped resources once", async () => {
   const setup = await createTestRenderer({ width: 80, height: 24, useThread: false })
@@ -21,12 +23,14 @@ test("SIGHUP clears title and disposes scoped resources once", async () => {
   const listeners = new Set(process.listeners("SIGHUP"))
   const events = createEventStream()
   const calls = createFetch(undefined, events)
+  const engibook = createFakeEngibookClient()
   const server = Bun.serve({ port: 0, fetch: (request) => calls.fetch(request) })
   try {
     const { run } = await import("../src/app")
     const task = Effect.runPromise(
       run({
         app: { name: "test", version: "test", channel: "test" },
+        engibook: engibook.client,
         server: { endpoint: { url: server.url.toString() } },
         config: { get: async () => ({}), update: async () => ({}) },
         packages: { resolve: async () => undefined },
@@ -36,10 +40,29 @@ test("SIGHUP clears title and disposes scoped resources once", async () => {
       }).pipe(Effect.provide(AppNodeBuilder.build(Global.node)), Effect.provide(FileSystem.layerNoop({}))),
     )
     await ready
+    const frame = await setup.waitForFrame((value) => value.includes("Adapted from the amazing"))
+    const editor = setup.renderer.currentFocusedEditor
+    expect(editor).toBeInstanceOf(TextareaRenderable)
+    expect(frame).not.toContain("Engineering Workstation")
+    expect(setup.renderer.root.findDescendantById("engiware-launch-plc")).toBeUndefined()
+    expect(engibook.calls.order).toEqual([])
+
+    setup.mockInput.typeText("/")
+    const menuFrame = await setup.waitForFrame((value) => value.includes("/agents"))
+    const autocomplete = setup.renderer.root.findDescendantById("prompt-autocomplete")
+    expect(autocomplete).toBeDefined()
+    const overlay = menuFrame
+      .split("\n")
+      .slice(autocomplete!.screenY, autocomplete!.screenY + autocomplete!.height)
+      .map((line) => line.slice(autocomplete!.screenX, autocomplete!.screenX + autocomplete!.width))
+      .join("\n")
+    expect(overlay).not.toMatch(/[█▀▄]/)
+
     process.emit("SIGHUP")
     await task
 
     expect(setup.renderer.isDestroyed).toBe(true)
+    expect(engibook.calls.close).toBe(1)
     expect(titles.at(-1)).toBe("")
     expect(process.listeners("SIGHUP").every((listener) => listeners.has(listener))).toBe(true)
   } finally {
@@ -115,9 +138,10 @@ test("session lifecycle updates the terminal title and prints the epilogue after
     await initialTitleSet
     await Bun.sleep(20)
     const frame = setup.captureCharFrame()
-    expect(frame).toContain("Navigation")
-    expect(frame).toContain("Engineering Display")
+    expect(frame).toContain("Project Tree")
+    expect(frame).toContain("Engineering Workstation")
     expect(frame).toContain("Context")
+    expect(frame).toContain("/plc")
     events.emit({
       id: "evt_renamed",
       created: 1,

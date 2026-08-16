@@ -109,6 +109,9 @@ import { generateThinkingSyntax } from "./thinking-syntax"
 import { createDelayedPresence } from "../../util/delayed-presence"
 import { SessionLocationMissing } from "./location-missing"
 import { EngiwareShell } from "../../engiware/shell/engiware-shell"
+import { useEngiwareApplication } from "../../engiware/application/provider"
+import { EngiwareCommands } from "../../engiware/application/commands"
+import { projectName } from "../../util/project"
 
 addDefaultParsers(parsers.parsers)
 
@@ -174,7 +177,19 @@ export function Session(props: { verticalTabsWidth: number }) {
     return index === -1 ? [] : messages().slice(index)
   }
   const currentLocation = useLocation()
+  const engiware = useEngiwareApplication()
   const location = createMemo(() => session()?.location ?? currentLocation.ref)
+  const recentProjects = createMemo(() =>
+    data.project
+      .list()
+      .filter((project) => project.canonical !== "/")
+      .slice(0, 6)
+      .map((project) => ({
+        id: project.id,
+        name: projectName(project, project.canonical) ?? project.canonical,
+        directory: project.canonical,
+      })),
+  )
 
   createEffect(() => currentLocation.set(location()))
 
@@ -1142,7 +1157,21 @@ export function Session(props: { verticalTabsWidth: number }) {
       }}
     >
       <box flexGrow={1} minHeight={0}>
-        <EngiwareShell sessionID={route.sessionID} />
+        <EngiwareCommands baseDirectory={location().directory} />
+        <Show when={session() && !session()!.parentID}>
+          <EngiwareShell
+            sessionID={route.sessionID}
+            recentProjects={recentProjects()}
+            composerDisabled={disabled()}
+            availableWidth={availableWidth()}
+            onPrepareComposer={() => setComposer("open", false)}
+            onOpenProject={(directory) => {
+              const target = { directory }
+              navigate({ type: "home", location: target })
+              currentLocation.set(target)
+            }}
+          />
+        </Show>
         <box
           flexDirection="row"
           flexGrow={1}
@@ -1160,50 +1189,50 @@ export function Session(props: { verticalTabsWidth: number }) {
           >
             <Show when={session()}>
               <box flexGrow={1} minHeight={0} position="relative">
-              <scrollbox
-                ref={(r) => (scroll = r)}
-                viewportOptions={{
-                  paddingRight: showScrollbar() ? 1 : 0,
-                }}
-                verticalScrollbarOptions={{
-                  paddingLeft: 1,
-                  visible: showScrollbar(),
-                  trackOptions: {
-                    backgroundColor: theme.raise(theme.background.surface.offset),
-                    foregroundColor: theme.border.default,
-                  },
-                }}
-                stickyScroll={!navigationMessage()}
-                stickyStart="bottom"
-                flexGrow={1}
-                scrollAcceleration={scrollAcceleration()}
-                onMouseScroll={(event) => {
-                  if (event.scroll?.direction === "up" && revealOlderRows()) return
-                  if (event.scroll?.direction === "down" && revealNewerRows()) return
-                  updateAwayFromBottom()
-                }}
-              >
-                <For each={visibleRows()}>
-                  {(row, index) => (
-                    <SessionRowView
-                      row={row}
-                      message={(messageID) => data.session.message.get(route.sessionID, messageID)}
-                      boundaryID={boundaries()[index() + hidden()]}
+                <scrollbox
+                  ref={(r) => (scroll = r)}
+                  viewportOptions={{
+                    paddingRight: showScrollbar() ? 1 : 0,
+                  }}
+                  verticalScrollbarOptions={{
+                    paddingLeft: 1,
+                    visible: showScrollbar(),
+                    trackOptions: {
+                      backgroundColor: theme.raise(theme.background.surface.offset),
+                      foregroundColor: theme.border.default,
+                    },
+                  }}
+                  stickyScroll={!navigationMessage()}
+                  stickyStart="bottom"
+                  flexGrow={1}
+                  scrollAcceleration={scrollAcceleration()}
+                  onMouseScroll={(event) => {
+                    if (event.scroll?.direction === "up" && revealOlderRows()) return
+                    if (event.scroll?.direction === "down" && revealNewerRows()) return
+                    updateAwayFromBottom()
+                  }}
+                >
+                  <For each={visibleRows()}>
+                    {(row, index) => (
+                      <SessionRowView
+                        row={row}
+                        message={(messageID) => data.session.message.get(route.sessionID, messageID)}
+                        boundaryID={boundaries()[index() + hidden()]}
+                      />
+                    )}
+                  </For>
+                  <BackgroundToolHint messages={messages()} />
+                  <Show when={session()?.revert?.messageID}>
+                    <RevertMessage
+                      count={messagesFromRevert().filter((message) => message.type === "user").length}
+                      files={session()!.revert!.files ?? []}
                     />
-                  )}
-                </For>
-                <BackgroundToolHint messages={messages()} />
-                <Show when={session()?.revert?.messageID}>
-                  <RevertMessage
-                    count={messagesFromRevert().filter((message) => message.type === "user").length}
-                    files={session()!.revert!.files ?? []}
-                  />
-                </Show>
-                <Show when={navigationSlack()}>
-                  {(height) => <box id={NAVIGATION_SLACK_ID} height={height()} flexShrink={0} />}
-                </Show>
-              </scrollbox>
-            </box>
+                  </Show>
+                  <Show when={navigationSlack()}>
+                    {(height) => <box id={NAVIGATION_SLACK_ID} height={height()} flexShrink={0} />}
+                  </Show>
+                </scrollbox>
+              </box>
             <box height={1} flexShrink={0} flexDirection="row" justifyContent="flex-end">
               <Show when={config.experimental?.tab_scroll === true && awayFromBottom()}>
                 <text
@@ -1265,7 +1294,8 @@ export function Session(props: { verticalTabsWidth: number }) {
                     visible={true}
                     ref={bind}
                     disabled={false}
-                    onSubmit={() => {
+                    onSubmit={(input, mode) => {
+                      if (mode === "normal") engiware.actions.observePrompt(input)
                       toBottom()
                     }}
                     onEmptySubmit={async () => {

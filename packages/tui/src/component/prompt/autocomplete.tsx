@@ -14,7 +14,7 @@ import { useConfig } from "../../config"
 import { useLocation } from "../../context/location"
 import { useTheme } from "../../context/theme"
 import { SplitBorder } from "../../ui/border"
-import { useTerminalDimensions } from "@opentui/solid"
+import { Portal, useTerminalDimensions } from "@opentui/solid"
 import { Locale } from "../../util/locale"
 import type { PromptInfo, PromptPartRef } from "../../prompt/history"
 import { useFrecency } from "../../prompt/frecency"
@@ -97,6 +97,7 @@ export function Autocomplete(props: {
   const [positionTick, setPositionTick] = createSignal(0)
   const [dismissedValue, setDismissedValue] = createSignal<string>()
   const [confirming, setConfirming] = createSignal<string>()
+  let portal: BoxRenderable | undefined
 
   createEffect(() => {
     if (!store.visible) return
@@ -109,8 +110,13 @@ export function Autocomplete(props: {
       let lastPos = { x: 0, y: 0, width: 0 }
       const interval = setInterval(() => {
         const anchor = props.anchor()
-        if (anchor.x !== lastPos.x || anchor.y !== lastPos.y || anchor.width !== lastPos.width) {
-          lastPos = { x: anchor.x, y: anchor.y, width: anchor.width }
+        const current = {
+          x: anchor.screenX - (portal?.screenX ?? 0),
+          y: anchor.screenY - (portal?.screenY ?? 0),
+          width: anchor.width,
+        }
+        if (current.x !== lastPos.x || current.y !== lastPos.y || current.width !== lastPos.width) {
+          lastPos = current
           setPositionTick((t) => t + 1)
         }
       }, 50)
@@ -124,13 +130,10 @@ export function Autocomplete(props: {
     dimensions()
     positionTick()
     const anchor = props.anchor()
-    const parent = anchor.parent
-    const parentX = parent?.x ?? 0
-    const parentY = parent?.y ?? 0
 
     return {
-      x: anchor.x - parentX,
-      y: anchor.y - parentY,
+      x: anchor.screenX - (portal?.screenX ?? 0),
+      y: anchor.screenY - (portal?.screenY ?? 0),
       width: anchor.width,
     }
   })
@@ -871,87 +874,91 @@ export function Autocomplete(props: {
   const emptyError = createMemo(() => store.visible === "reference" && !files.loading && visibleFiles().failed)
 
   return (
-    <box
-      visible={store.visible !== false}
-      position="absolute"
-      top={position().y - height()}
-      left={position().x}
-      width={position().width}
-      zIndex={100}
-      {...SplitBorder}
-      borderColor={theme.border.default}
-    >
-      <scrollbox
-        ref={(r: ScrollBoxRenderable) => (scroll = r)}
+    <Portal ref={(value) => (portal = value as BoxRenderable)}>
+      <box
+        id="prompt-autocomplete"
+        visible={store.visible !== false}
+        position="absolute"
+        top={position().y - height()}
+        left={position().x}
+        width={position().width}
+        zIndex={100}
         backgroundColor={theme.background.default}
-        height={height()}
-        scrollbarOptions={{ visible: false }}
-        scrollAcceleration={scrollAcceleration()}
+        {...SplitBorder}
+        borderColor={theme.border.default}
       >
-        <Index
-          each={options()}
-          fallback={
-            <box paddingLeft={1} paddingRight={1}>
-              <text fg={emptyError() ? theme.text.feedback.error.default : theme.text.subdued}>{emptyMessage()}</text>
-            </box>
-          }
+        <scrollbox
+          ref={(r: ScrollBoxRenderable) => (scroll = r)}
+          backgroundColor={theme.background.default}
+          height={height()}
+          scrollbarOptions={{ visible: false }}
+          scrollAcceleration={scrollAcceleration()}
         >
-          {(option, index) => {
-            const destructive = () => option().destructive
-            const confirmingAction = () => {
-              const action = destructive()
-              return action !== undefined && action.id === confirming()
-            }
-            return (
-              <box
-                paddingLeft={1}
-                paddingRight={1}
-                backgroundColor={
-                  confirmingAction()
-                    ? theme.background.action.destructive.focused
-                    : index === store.selected
-                      ? theme.background.action.primary.focused
-                      : undefined
-                }
-                flexDirection="row"
-                onMouseMove={() => {
-                  setStore("input", "mouse")
-                }}
-                onMouseOver={() => {
-                  if (store.input !== "mouse") return
-                  moveTo(index)
-                }}
-                onMouseDown={() => {
-                  setStore("input", "mouse")
-                  moveTo(index)
-                }}
-                onMouseUp={() => select()}
-              >
-                <text
-                  fg={
-                    confirmingAction()
-                      ? theme.text.action.destructive.focused
-                      : index === store.selected
-                        ? theme.text.action.primary.focused
-                        : theme.text.default
-                  }
-                  flexShrink={0}
-                >
-                  {confirmingAction() ? destructive()?.confirm : option().display}
-                </text>
-                <Show when={!confirmingAction() && option().description}>
-                  <text
-                    fg={index === store.selected ? theme.text.action.primary.focused : theme.text.subdued}
-                    wrapMode="none"
-                  >
-                    {" " + option().description?.trimStart()}
-                  </text>
-                </Show>
+          <Index
+            each={options()}
+            fallback={
+              <box paddingLeft={1} paddingRight={1}>
+                <text fg={emptyError() ? theme.text.feedback.error.default : theme.text.subdued}>{emptyMessage()}</text>
               </box>
-            )
-          }}
-        </Index>
-      </scrollbox>
-    </box>
+            }
+          >
+            {(option, index) => {
+              const destructive = () => option().destructive
+              const confirmingAction = () => {
+                const action = destructive()
+                return action !== undefined && action.id === confirming()
+              }
+              return (
+                <box
+                  paddingLeft={1}
+                  paddingRight={1}
+                  backgroundColor={
+                    confirmingAction()
+                      ? theme.background.action.destructive.focused
+                      : index === store.selected
+                        ? theme.background.action.primary.focused
+                        : undefined
+                  }
+                  flexDirection="row"
+                  onMouseMove={() => {
+                    setStore("input", "mouse")
+                  }}
+                  onMouseOver={() => {
+                    if (store.input !== "mouse") return
+                    moveTo(index)
+                  }}
+                  onMouseDown={() => {
+                    setStore("input", "mouse")
+                    moveTo(index)
+                  }}
+                  onMouseUp={() => select()}
+                >
+                  <text
+                    fg={
+                      confirmingAction()
+                        ? theme.text.action.destructive.focused
+                        : index === store.selected
+                          ? theme.text.action.primary.focused
+                          : theme.text.default
+                    }
+                    flexShrink={0}
+                  >
+                    {confirmingAction() ? destructive()?.confirm : option().display}
+                  </text>
+                  <Show when={!confirmingAction() && option().description}>
+                    <text
+                      fg={index === store.selected ? theme.text.action.primary.focused : theme.text.subdued}
+                      wrapMode="none"
+                    >
+                      {" " + option().description?.trimStart()}
+                    </text>
+                  </Show>
+                </box>
+              )
+            }}
+          </Index>
+        </scrollbox>
+      </box>
+    </Portal>
   )
 }
