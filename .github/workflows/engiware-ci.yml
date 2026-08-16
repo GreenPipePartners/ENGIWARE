@@ -4,9 +4,9 @@ on:
   workflow_call:
   workflow_dispatch:
   push:
-    branches: [engiware-v2, engiware-repaired]
+    branches: [main]
   pull_request:
-    branches: [engiware-v2, engiware-repaired]
+    branches: [main]
   schedule:
     - cron: "0 6 * * 1"
 

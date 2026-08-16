@@ -12,7 +12,7 @@ The terminal client includes a read-only PLC recovery-browser slice backed by an
 - Upstream branch: `v2`
 - Initial base commit: `66c29675202797b926d20c9c4cbe864e722c3c3a`
 - Current synchronized commit: `08dd3f51ed5cba6ead719177c0fc68f5f17efac4`
-- Repaired Engiware branch: `engiware-repaired`
+- Engiware default branch: `main`
 - Intended fork repository: `https://github.com/GreenPipePartners/ENGIWARE`
 
 OpenCode V1 compatibility packages are not the base for this work. The synchronized commit is
