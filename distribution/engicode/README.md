@@ -12,7 +12,7 @@ each `v<version>` release. A public installation then becomes:
 
 ```sh
 curl -fsSL https://engiware.org/install | bash
-engicode
+engiware
 ```
 
 The installer supports pinned versions and non-root user prefixes:
@@ -34,7 +34,7 @@ graphics driver. Run from PowerShell:
 
 ```powershell
 irm https://engiware.org/install.ps1 | iex
-engicode
+engiware
 ```
 
 For the standard Windows experience, download `https://engiware.org/EngiCodeSetup.exe`. The native
@@ -49,10 +49,11 @@ distribution/engicode/build-windows-installer.sh --version 1.0.0
 If WSL2 or Ubuntu is absent, an elevated PowerShell session provisions it. A required Windows
 restart is reported with exit code `3010`; run the installer again after restart. The installer
 places EngiCode inside WSL, installs Winghostty through
-`winget install AmanThanvi.winghostty`, and creates `%LOCALAPPDATA%\EngiCode\bin\engicode.cmd`.
-Running `engicode` from PowerShell opens a dedicated Winghostty window executing EngiCode inside
-the selected WSL distribution. `engicode-cli` is also installed for noninteractive commands that
-should stay in the current PowerShell window, such as `engicode-cli --version`.
+`winget install AmanThanvi.winghostty`, and creates `%LOCALAPPDATA%\EngiCode\bin\engiware.cmd`.
+Running `engiware` from PowerShell opens a dedicated Winghostty window executing EngiCode inside
+the selected WSL distribution. `engiware-cli` is also installed for noninteractive commands that
+should stay in the current PowerShell window, such as `engiware-cli --version`. The former
+`engicode` and `engicode-cli` commands remain compatibility aliases.
 
 Winghostty currently uses a self-signed Authenticode certificate, so Windows may show a SmartScreen
 warning. Its WinGet package and release checksums come from the Winghostty project; review
@@ -174,6 +175,6 @@ distribution/engicode/install.sh \
   --checksum dist/engicode/SHA256SUMS \
   --prefix /tmp/engicode-install
 
-/tmp/engicode-install/bin/engicode --version
+/tmp/engicode-install/bin/engiware --version
 distribution/engicode/verify-install.sh /tmp/engicode-install
 ```

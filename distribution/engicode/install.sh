@@ -188,7 +188,14 @@ done < <(tar -tzf "$archive")
 mkdir -p "$prefix/lib/engicode" "$prefix/bin"
 stage=$(mktemp -d "$prefix/lib/engicode/.install.XXXXXX")
 tar --no-same-owner -xzf "$archive" -C "$stage"
+if [[ ! -e "$stage/bin/engiware" && -x "$stage/bin/engicode" ]]; then
+  ln -s engicode "$stage/bin/engiware"
+fi
+if [[ ! -e "$stage/bin/engicode" && -x "$stage/bin/engiware" ]]; then
+  ln -s engiware "$stage/bin/engicode"
+fi
 commands=(
+  engiware
   engicode
   engiware-plc-engibook
   engiware-ignition-engibook
@@ -229,9 +236,9 @@ for command in "${commands[@]}"; do
   mv -Tf "$link" "$prefix/bin/$command"
 done
 
-installed=$($prefix/bin/engicode --version)
-printf 'Installed %s at %s/bin/engicode\n' "$installed" "$prefix"
+installed=$($prefix/bin/engiware --version)
+printf 'Installed %s at %s/bin/engiware\n' "$installed" "$prefix"
 case ":$PATH:" in
   *":$prefix/bin:"*) ;;
-  *) printf 'Add %s/bin to PATH before invoking engicode.\n' "$prefix" ;;
+  *) printf 'Add %s/bin to PATH before invoking engiware.\n' "$prefix" ;;
 esac

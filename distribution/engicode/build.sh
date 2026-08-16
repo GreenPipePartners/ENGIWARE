@@ -101,7 +101,7 @@ build_flags=(--single --skip-install --outdir="$work/cli")
 if [[ "$arch" == x64 ]]; then
   build_flags+=(--baseline)
 fi
-OPENCODE_CLI_NAME=engicode \
+OPENCODE_CLI_NAME=engiware \
 OPENCODE_CHANNEL=engicode \
 OPENCODE_VERSION="$version" \
 OPENCODE_SOURCEMAP=none \
@@ -127,7 +127,7 @@ fi
 package_target() {
   local target=$1
   local suffix=$2
-  local cli="$work/cli/cli-$target/bin/engicode"
+  local cli="$work/cli/cli-$target/bin/engiware"
   local stage="$work/stage-$suffix"
   local archive="$output_dir/engicode-linux-$suffix.tar.gz"
   if [[ ! -x "$cli" ]]; then
@@ -136,7 +136,8 @@ package_target() {
   fi
 
   mkdir -p "$stage/bin" "$stage/lib" "$stage/libexec" "$stage/runtime"
-  install -m 755 "$script_dir/launcher.sh" "$stage/bin/engicode"
+  install -m 755 "$script_dir/launcher.sh" "$stage/bin/engiware"
+  ln -s engiware "$stage/bin/engicode"
   install -m 755 "$cli" "$stage/libexec/engicode-core"
   install -m 755 "$script_dir/python-command.sh" "$stage/libexec/engicode-python"
   cp -a "$python_source" "$stage/runtime/python"

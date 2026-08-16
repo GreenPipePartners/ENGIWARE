@@ -126,16 +126,20 @@ if (-not $winghostty) {
 
 $bin = Join-Path $env:LOCALAPPDATA "EngiCode\bin"
 New-Item -ItemType Directory -Force -Path $bin | Out-Null
-$wrapper = Join-Path $bin "engicode.cmd"
-@"
+$terminalWrapper = @"
 @echo off
-start "" "$winghostty" -e wsl.exe --distribution $Distribution -- engicode %*
-"@ | Set-Content -Encoding Ascii -Path $wrapper
-$cliWrapper = Join-Path $bin "engicode-cli.cmd"
-@"
+start "" "$winghostty" -e wsl.exe --distribution $Distribution -- engiware %*
+"@
+foreach ($name in @("engiware.cmd", "engicode.cmd")) {
+    $terminalWrapper | Set-Content -Encoding Ascii -Path (Join-Path $bin $name)
+}
+$cliWrapper = @"
 @echo off
-wsl.exe --distribution $Distribution -- engicode %*
-"@ | Set-Content -Encoding Ascii -Path $cliWrapper
+wsl.exe --distribution $Distribution -- engiware %*
+"@
+foreach ($name in @("engiware-cli.cmd", "engicode-cli.cmd")) {
+    $cliWrapper | Set-Content -Encoding Ascii -Path (Join-Path $bin $name)
+}
 
 $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
 $entries = @($userPath -split ';' | Where-Object { $_ })
@@ -146,6 +150,6 @@ if (($env:Path -split ';') -notcontains $bin) {
     $env:Path = "$env:Path;$bin"
 }
 
-$installedVersion = & wsl.exe --distribution $Distribution -- engicode --version
+$installedVersion = & wsl.exe --distribution $Distribution -- engiware --version
 if ($LASTEXITCODE -ne 0) { throw "EngiCode verification failed with exit code $LASTEXITCODE." }
-Write-Host "Installed $installedVersion in $Distribution with Winghostty. Open a new PowerShell window and run: engicode"
+Write-Host "Installed $installedVersion in $Distribution with Winghostty. Open a new PowerShell window and run: engiware"

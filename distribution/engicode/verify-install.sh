@@ -2,21 +2,26 @@
 set -euo pipefail
 
 prefix=${1:-}
-if [[ -z "$prefix" || ! -x "$prefix/bin/engicode" ]]; then
+if [[ -z "$prefix" || ! -x "$prefix/bin/engiware" || ! -x "$prefix/bin/engicode" ]]; then
   printf 'Usage: verify-install.sh <installed-prefix>\n' >&2
   exit 64
 fi
 
-version=$($prefix/bin/engicode --version)
+version=$($prefix/bin/engiware --version)
 case "$version" in
-  'engicode v'*) ;;
+  'engiware v'*) ;;
   *)
     printf 'Unexpected EngiCode version output: %s\n' "$version" >&2
     exit 65
     ;;
 esac
 
-payload=$(readlink -f -- "$prefix/bin/engicode")
+if [[ $($prefix/bin/engicode --version) != "$version" ]]; then
+  printf '%s\n' 'EngiCode compatibility alias does not invoke the installed Engiware version.' >&2
+  exit 65
+fi
+
+payload=$(readlink -f -- "$prefix/bin/engiware")
 payload=$(CDPATH= cd -- "$(dirname -- "$payload")/.." && pwd)
 request='{"id":"smoke","method":"host.hello","params":{"protocolVersion":1}}'
 for host in flux-deep-domain-host engiware-ignition-domain-host engiware-engibook-domain-host; do

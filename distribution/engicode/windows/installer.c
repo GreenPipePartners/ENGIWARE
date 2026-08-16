@@ -162,7 +162,7 @@ static bool create_start_menu_shortcut(const wchar_t *installer) {
   wchar_t shortcut[MAX_PATH];
   if (FAILED(SHGetFolderPathW(NULL, CSIDL_PROGRAMS | CSIDL_FLAG_CREATE, NULL, SHGFP_TYPE_CURRENT, programs))) return false;
   if (FAILED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, local_app_data))) return false;
-  swprintf_s(target, MAX_PATH, L"%ls\\EngiCode\\bin\\engicode.cmd", local_app_data);
+  swprintf_s(target, MAX_PATH, L"%ls\\EngiCode\\bin\\engiware.cmd", local_app_data);
   swprintf_s(shortcut, MAX_PATH, L"%ls\\EngiCode.lnk", programs);
   if (GetFileAttributesW(target) == INVALID_FILE_ATTRIBUTES) return false;
 
@@ -266,7 +266,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previous, PWSTR command_line, 
       wchar_t local_app_data[MAX_PATH];
       wchar_t launcher[MAX_PATH];
       if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, local_app_data))) {
-        swprintf_s(launcher, MAX_PATH, L"%ls\\EngiCode\\bin\\engicode.cmd", local_app_data);
+        swprintf_s(launcher, MAX_PATH, L"%ls\\EngiCode\\bin\\engiware.cmd", local_app_data);
         ShellExecuteW(NULL, L"open", launcher, NULL, NULL, SW_SHOWNORMAL);
       }
     }

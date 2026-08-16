@@ -62,6 +62,8 @@ root_headers=$(curl -fsSI "http://127.0.0.1:$port/")
 [[ "${root_headers,,}" == *"content-type: text/html"* ]]
 [[ "${root_headers,,}" == *"content-security-policy:"* ]]
 [[ "${root_headers,,}" == *"cache-control: no-cache"* ]]
+root_body=$(curl -fsS "http://127.0.0.1:$port/")
+[[ "$root_body" == *'<code>engiware</code>'* ]]
 
 enterprise_headers=$(curl -fsSI "http://127.0.0.1:$port/enterprise")
 [[ "$enterprise_headers" == *"200 OK"* ]]
