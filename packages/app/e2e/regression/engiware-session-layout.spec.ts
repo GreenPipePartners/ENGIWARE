@@ -6,6 +6,7 @@ import { expectSessionTitle } from "../utils/waits"
 const directory = "C:/OpenCode/EngiwareSessionLayout"
 const sessionID = "ses_engiware_session_layout"
 const title = "Engiware session layout"
+const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
 
 test("shows the Engiware wireframes above the compact session", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1200 })
@@ -67,7 +68,7 @@ async function openSession(page: Page) {
     pageMessages: () => ({ items: [] }),
   })
 
-  await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)
+  await page.goto(`/server/${base64Encode(server)}/session/${sessionID}`)
   await expectSessionTitle(page, title)
 }
 
