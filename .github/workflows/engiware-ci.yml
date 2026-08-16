@@ -44,11 +44,11 @@ jobs:
         working-directory: packages/app
       - run: bun typecheck:e2e
         working-directory: packages/app
-      - run: bun test
+      - run: bun run test
         working-directory: packages/cli
-      - run: bun test
+      - run: bun run test
         working-directory: packages/tui
-      - run: bun test
+      - run: bun run test
         working-directory: packages/app
 
   python:
