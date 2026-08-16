@@ -57,6 +57,8 @@ test("SIGHUP clears title and disposes scoped resources once", async () => {
       .map((line) => line.slice(autocomplete!.screenX, autocomplete!.screenX + autocomplete!.width))
       .join("\n")
     expect(overlay).not.toMatch(/[█▀▄]/)
+    if (editor instanceof TextareaRenderable) editor.setText("")
+    await setup.waitForFrame((value) => !value.includes("/agents"))
 
     process.emit("SIGHUP")
     await task
