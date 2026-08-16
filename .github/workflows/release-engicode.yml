@@ -17,7 +17,11 @@ permissions:
   contents: write
 
 jobs:
+  verify:
+    uses: ./.github/workflows/engiware-ci.yml
+
   linux-x64:
+    needs: verify
     runs-on: [self-hosted, linux, x64, engicode-builder]
     env:
       ENGICODE_WORKSPACE_ROOT: ${{ vars.ENGICODE_WORKSPACE_ROOT }}

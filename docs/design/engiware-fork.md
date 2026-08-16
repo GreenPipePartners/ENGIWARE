@@ -11,10 +11,14 @@ The terminal client includes a read-only PLC recovery-browser slice backed by an
 - Upstream: `https://github.com/anomalyco/opencode.git`
 - Upstream branch: `v2`
 - Initial base commit: `66c29675202797b926d20c9c4cbe864e722c3c3a`
-- Engiware branch: `engiware-v2`
+- Current synchronized commit: `08dd3f51ed5cba6ead719177c0fc68f5f17efac4`
+- Repaired Engiware branch: `engiware-repaired`
 - Intended fork repository: `https://github.com/GreenPipePartners/ENGIWARE`
 
-OpenCode V1 compatibility packages are not the base for this work.
+OpenCode V1 compatibility packages are not the base for this work. The synchronized commit is
+recorded in `.engiware/upstream-v2.sha`; CI verifies that it is a real ancestor of Engiware and the
+live upstream V2 branch. Engiware changes remain a replayable commit stack above that commit rather
+than a tree snapshot or unrelated root history.
 
 ## Product Layout
 

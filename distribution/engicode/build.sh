@@ -88,6 +88,7 @@ for source in "${sources[@]}"; do
     exit 66
   fi
 done
+bun "$script_dir/source-lock.ts" check --workspace-root "$workspace_root"
 
 mkdir -p "$output_dir"
 output_dir=$(CDPATH= cd -- "$output_dir" && pwd)

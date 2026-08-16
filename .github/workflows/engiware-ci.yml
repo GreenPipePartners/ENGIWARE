@@ -1,0 +1,119 @@
+name: Engiware CI
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  push:
+    branches: [engiware-v2, engiware-repaired]
+  pull_request:
+    branches: [engiware-v2, engiware-repaired]
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  lineage:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+      - name: Verify upstream ancestry
+        run: |
+          git fetch --no-tags https://github.com/anomalyco/opencode.git v2:refs/remotes/upstream-check/v2
+          base=$(tr -d '[:space:]' < .engiware/upstream-v2.sha)
+          git cat-file -e "$base^{commit}"
+          git merge-base --is-ancestor "$base" HEAD
+          git merge-base --is-ancestor "$base" upstream-check/v2
+
+  typescript:
+    needs: lineage
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: ./.github/actions/setup-bun
+        with:
+          install-flags: --frozen-lockfile
+      - run: bun typecheck
+        working-directory: packages/cli
+      - run: bun typecheck
+        working-directory: packages/tui
+      - run: bun typecheck
+        working-directory: packages/app
+      - run: bun typecheck:e2e
+        working-directory: packages/app
+      - run: bun test
+        working-directory: packages/cli
+      - run: bun test
+        working-directory: packages/tui
+      - run: bun test
+        working-directory: packages/app
+
+  python:
+    needs: lineage
+    runs-on: [self-hosted, linux, x64, engicode-builder]
+    env:
+      ENGICODE_WORKSPACE_ROOT: ${{ vars.ENGICODE_WORKSPACE_ROOT }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Verify locked release sources
+        run: |
+          test -n "$ENGICODE_WORKSPACE_ROOT"
+          bun distribution/engicode/source-lock.ts check --workspace-root "$ENGICODE_WORKSPACE_ROOT"
+      - name: Test Engibook contracts
+        run: |
+          uv run --project "$ENGICODE_WORKSPACE_ROOT/10018-GPP-Engiware/engibook" ruff check "$ENGICODE_WORKSPACE_ROOT/10018-GPP-Engiware/engibook"
+          uv run --project "$ENGICODE_WORKSPACE_ROOT/10018-GPP-Engiware/engibook" pytest "$ENGICODE_WORKSPACE_ROOT/10018-GPP-Engiware/engibook/tests"
+      - name: Test Engibook host
+        run: |
+          uv run --project "$ENGICODE_WORKSPACE_ROOT/10018-GPP-Engiware/engibook-host" ruff check "$ENGICODE_WORKSPACE_ROOT/10018-GPP-Engiware/engibook-host"
+          uv run --project "$ENGICODE_WORKSPACE_ROOT/10018-GPP-Engiware/engibook-host" pytest "$ENGICODE_WORKSPACE_ROOT/10018-GPP-Engiware/engibook-host/tests"
+
+  web-e2e:
+    needs: lineage
+    runs-on: ubuntu-24.04
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: ./.github/actions/setup-bun
+        with:
+          install-flags: --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
+        working-directory: packages/app
+      - run: bunx playwright test e2e/regression/engiware-session-layout.spec.ts
+        working-directory: packages/app
+        env:
+          CI: true
+
+  installer:
+    needs: lineage
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - run: distribution/engicode/test-install.sh
+
+  upstream-canary:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+      - name: Rebase onto live upstream
+        run: |
+          git config user.email "bot@engiware.org"
+          git config user.name "Engiware CI"
+          git fetch --no-tags https://github.com/anomalyco/opencode.git v2:refs/remotes/upstream-check/v2
+          git rebase upstream-check/v2
+      - uses: ./.github/actions/setup-bun
+        with:
+          install-flags: --frozen-lockfile
+      - run: bun typecheck
+        working-directory: packages/cli
+      - run: bun typecheck
+        working-directory: packages/tui
+      - run: bun typecheck
+        working-directory: packages/app

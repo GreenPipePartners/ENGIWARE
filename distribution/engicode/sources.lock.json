@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "path": "10018-GPP-Engiware/engibook",
+      "sha256": "a937a98055f1d97a82bc33ad7a4b03c6b943e513a082467d484c6f27a67ddbf7"
+    },
+    {
+      "path": "10018-GPP-Engiware/engibook-host",
+      "sha256": "b216684b73d5598a85dd2a406802f8f6219d5a7ec12961cb6f8e7d0c1fc89933"
+    },
+    {
+      "path": "100107-GPP-Ignition",
+      "sha256": "9bf75e9f03c1c106a2b67c4444b08ac14c148ecd7276ed0a24eacbf88e4cac66"
+    },
+    {
+      "path": "100104-GPP-plc",
+      "sha256": "f9864b6b8b3acfe50e9ef634f5a4e1eb69137327a331831d5e11146695fdc076"
+    },
+    {
+      "path": "100105-GPP-panel",
+      "sha256": "9aea2b716164b4a9af378593e5618e00668f6f34c36ff122c8aacc20fc58a81d"
+    },
+    {
+      "path": "100106-GPP-schematics",
+      "sha256": "dd11a52dca8d47c4f3f4a18999a6cfd813191f4d1bd9acef83d0c9e6562277ec"
+    },
+    {
+      "path": "100101-GPP-flux_deep_plc",
+      "sha256": "ebeac982e0bdbe09ed64b2a9b7629b26dff93630cfbb1427d9e91cee7978e7bc"
+    },
+    {
+      "path": "100102-GPP-flux_deep_schematics",
+      "sha256": "7ffb153a65fa0c4bdcfcdf227e745cf821f5d91f8fd0b4ff50210f0ee57baea4"
+    },
+    {
+      "path": "10010-GPP-Flux/mine",
+      "sha256": "fb3f66405a93475941208b8f91a89ff396dcf186a5e079d60b4995cf49595f8e"
+    },
+    {
+      "path": "10010-GPP-Flux/panel",
+      "sha256": "90bba753c7802db30201a2767df3978ac27aaf11960914570995f4d0dbf6ad8a"
+    }
+  ]
+}
