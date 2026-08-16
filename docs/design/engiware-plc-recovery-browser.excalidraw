@@ -1,0 +1,910 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "mcp-excalidraw-server",
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 30,
+      "width": 900,
+      "height": 42,
+      "strokeColor": "#1e1e1e",
+      "text": "Engiware PLC Recovery Browser",
+      "fontSize": 32,
+      "fontFamily": 2,
+      "createdAt": "2026-08-14T00:24:51.632Z",
+      "updatedAt": "2026-08-14T00:24:51.632Z",
+      "version": 1
+    },
+    {
+      "id": "subtitle",
+      "type": "text",
+      "x": 42,
+      "y": 78,
+      "width": 1450,
+      "height": 26,
+      "strokeColor": "#868e96",
+      "text": "Composer-first L5X import, atomic PLC session replacement, typed interfaces, and read-only request flow",
+      "fontSize": 18,
+      "fontFamily": 2,
+      "createdAt": "2026-08-14T00:24:51.633Z",
+      "updatedAt": "2026-08-14T03:05:34.873Z",
+      "version": 3,
+      "originalText": "Composer-first L5X import, atomic PLC session replacement, typed interfaces, and read-only request flow"
+    },
+    {
+      "id": "zone-open",
+      "type": "rectangle",
+      "x": 40,
+      "y": 130,
+      "width": 2040,
+      "height": 250,
+      "backgroundColor": "#e9ecef",
+      "strokeColor": "#868e96",
+      "strokeWidth": 1,
+      "roughness": 0,
+      "opacity": 35,
+      "createdAt": "2026-08-14T00:24:51.634Z",
+      "updatedAt": "2026-08-14T00:24:51.634Z",
+      "version": 1
+    },
+    {
+      "id": "label-open",
+      "type": "text",
+      "x": 70,
+      "y": 150,
+      "width": 430,
+      "height": 26,
+      "strokeColor": "#495057",
+      "text": "OPENCODE V2 | session authority and composition",
+      "fontSize": 20,
+      "fontFamily": 2,
+      "createdAt": "2026-08-14T00:24:51.634Z",
+      "updatedAt": "2026-08-14T00:25:16.331Z",
+      "version": 2,
+      "originalText": "OPENCODE V2 | session authority and composition"
+    },
+    {
+      "id": "handler",
+      "type": "rectangle",
+      "x": 80,
+      "y": 200,
+      "width": 400,
+      "height": 130,
+      "backgroundColor": "#ffffff",
+      "strokeColor": "#868e96",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "label": {
+        "text": "default Runtime.handler\npackages/cli/src/commands/\nhandlers/default.ts\nstarts optional host; run({ engiware })"
+      },
+      "fontSize": 16,
+      "fontFamily": 3,
+      "createdAt": "2026-08-14T00:24:51.635Z",
+      "updatedAt": "2026-08-14T00:25:16.358Z",
+      "version": 2
+    },
+    {
+      "id": "run",
+      "type": "rectangle",
+      "x": 560,
+      "y": 210,
+      "width": 420,
+      "height": 110,
+      "backgroundColor": "#a5d8ff",
+      "strokeColor": "#1971c2",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "label": {
+        "text": "run(input: TuiInput)\npackages/tui/src/app.tsx\nprovider + hidden commands above routes"
+      },
+      "fontSize": 16,
+      "fontFamily": 3,
+      "createdAt": "2026-08-14T00:24:51.635Z",
+      "updatedAt": "2026-08-14T02:30:12.663Z",
+      "version": 3
+    },
+    {
+      "id": "shell",
+      "type": "rectangle",
+      "x": 1060,
+      "y": 210,
+      "width": 440,
+      "height": 110,
+      "backgroundColor": "#a5d8ff",
+      "strokeColor": "#1971c2",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "label": {
+        "text": "Home: centered logo + composer\nSession: EngiwareShell selects active module\nworkspace containers own three-pane frame"
+      },
+      "fontSize": 16,
+      "fontFamily": 3,
+      "createdAt": "2026-08-14T00:24:51.636Z",
+      "updatedAt": "2026-08-14T11:49:26.264Z",
+      "version": 4
+    },
+    {
+      "id": "native",
+      "type": "rectangle",
+      "x": 1580,
+      "y": 210,
+      "width": 420,
+      "height": 110,
+      "backgroundColor": "#ffffff",
+      "strokeColor": "#868e96",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "label": {
+        "text": "Native OpenCode region\ncomposer always owns typing focus\n/opencode expands transcript + tools"
+      },
+      "fontSize": 16,
+      "fontFamily": 3,
+      "createdAt": "2026-08-14T00:24:51.636Z",
+      "updatedAt": "2026-08-14T02:01:34.587Z",
+      "version": 2
+    },
+    {
+      "id": "a-handler-run",
+      "type": "arrow",
+      "x": 488,
+      "y": 265,
+      "strokeColor": "#1971c2",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "label": {
+        "text": ""
+      },
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          64,
+          0
+        ]
+      ],
+      "start": {
+        "id": "handler"
+      },
+      "end": {
+        "id": "run"
+      },
+      "endArrowhead": "arrow",
+      "createdAt": "2026-08-14T00:24:51.637Z",
+      "updatedAt": "2026-08-14T00:25:39.677Z",
+      "version": 4
+    },
+    {
+      "id": "a-run-shell",
+      "type": "arrow",
+      "x": 988,
+      "y": 265,
+      "strokeColor": "#1971c2",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "label": {
+        "text": ""
+      },
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          64,
+          0
+        ]
+      ],
+      "start": {
+        "id": "run"
+      },
+      "end": {
+        "id": "shell"
+      },
+      "endArrowhead": "arrow",
+      "createdAt": "2026-08-14T00:24:51.638Z",
+      "updatedAt": "2026-08-14T00:25:39.701Z",
+      "version": 2
+    },
+    {
+      "id": "a-shell-native",
+      "type": "arrow",
+      "x": 1508,
+      "y": 265,
+      "strokeColor": "#868e96",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "label": {
+        "text": ""
+      },
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          64,
+          0
+        ]
+      ],
+      "start": {
+        "id": "shell"
+      },
+      "end": {
+        "id": "native"
+      },
+      "endArrowhead": "arrow",
+      "createdAt": "2026-08-14T00:24:51.638Z",
+      "updatedAt": "2026-08-14T00:25:39.707Z",
+      "version": 2
+    },
+    {
+      "id": "zone-tui",
+      "type": "rectangle",
+      "x": 40,
+      "y": 420,
+      "width": 1400,
+      "height": 500,
+      "backgroundColor": "#a5d8ff",
+      "strokeColor": "#1971c2",
+      "strokeWidth": 1,
+      "roughness": 0,
+      "opacity": 22,
+      "createdAt": "2026-08-14T00:24:51.638Z",
+      "updatedAt": "2026-08-14T00:24:51.638Z",
+      "version": 1
+    },
+    {
+      "id": "label-tui",
+      "type": "text",
+      "x": 70,
+      "y": 440,
+      "width": 580,
+      "height": 26,
+      "strokeColor": "#1971c2",
+      "text": "ENGIWARE TUI | orchestration and typed rendering",
+      "fontSize": 20,
+      "fontFamily": 2,
+      "createdAt": "2026-08-14T00:24:51.638Z",
+      "updatedAt": "2026-08-14T00:24:51.638Z",
+      "version": 1
+    },
+    {
+      "id": "contract",
+      "type": "rectangle",
+      "x": 80,
+      "y": 510,
+      "width": 400,
+      "height": 160,
+      "backgroundColor": "#ffffff",
+      "strokeColor": "#1971c2",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "label": {
+        "text": "application/module.ts\nEngiwareWorkspaceModule\nProjectTree(onActivate)\nworkstation(openTarget, Component, actions)\nContext Component"
+      },
+      "fontSize": 16,
+      "fontFamily": 3,
+      "createdAt": "2026-08-14T00:24:51.638Z",
+      "updatedAt": "2026-08-14T11:49:26.266Z",
+      "version": 5
+    },
+    {
+      "id": "provider",
+      "type": "rectangle",
+      "x": 560,
+      "y": 500,
+      "width": 780,
+      "height": 180,
+      "backgroundColor": "#a5d8ff",
+      "strokeColor": "#1971c2",
+      "strokeWidth": 3,
+      "roughness": 0,
+      "label": {
+        "text": "EngiwareApplicationProvider | application/provider.tsx\nshared app state + typed domain orchestration\nmenu | plc | ignition | opencode\nmodules consume controller interfaces\nready panes stay mounted while updating\nstale response generations reconcile state"
+      },
+      "fontSize": 17,
+      "fontFamily": 3,
+      "createdAt": "2026-08-14T00:24:51.638Z",
+      "updatedAt": "2026-08-14T11:49:26.482Z",
+      "version": 6
+    },
+    {
+      "id": "navigation",
+      "type": "rectangle",
+      "x": 80,
+      "y": 750,
+      "width": 380,
+      "height": 110,
+      "backgroundColor": "#ffffff",
+      "strokeColor": "#1971c2",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "label": {
+        "text": "ProjectTreeContainer\nmodule.ProjectTree receives onActivate\nactivation -> workstation.openTarget\nindependent container tests"
+      },
+      "fontSize": 16,
+      "fontFamily": 3,
+      "createdAt": "2026-08-14T00:24:51.638Z",
+      "updatedAt": "2026-08-14T11:49:26.267Z",
+      "version": 4
+    },
+    {
+      "id": "display",
+      "type": "rectangle",
+      "x": 520,
+      "y": 740,
+      "width": 400,
+      "height": 130,
+      "backgroundColor": "#ffffff",
+      "strokeColor": "#1971c2",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "label": {
+        "text": "EngineeringWorkstationContainer\nmodule workstation Component\nmodule-owned target activation + actions\nPLC | Ignition | menu adapters"
+      },
+      "fontSize": 16,
+      "fontFamily": 3,
+      "createdAt": "2026-08-14T00:24:51.639Z",
+      "updatedAt": "2026-08-14T11:49:26.269Z",
+      "version": 6
+    },
+    {
+      "id": "context",
+      "type": "rectangle",
+      "x": 980,
+      "y": 750,
+      "width": 380,
+      "height": 110,
+      "backgroundColor": "#ffffff",
+      "strokeColor": "#1971c2",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "label": {
+        "text": "ContextContainer\nmodule.Context slot\nclick label -> /context\nvisibility/layout are container-owned"
+      },
+      "fontSize": 16,
+      "fontFamily": 3,
+      "createdAt": "2026-08-14T00:24:51.639Z",
+      "updatedAt": "2026-08-14T11:49:26.322Z",
+      "version": 5
+    },
+    {
+      "id": "a-contract-provider",
+      "type": "arrow",
+      "x": 488,
+      "y": 590,
+      "strokeColor": "#1971c2",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "label": {
+        "text": ""
+      },
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          64,
+          0
+        ]
+      ],
+      "start": {
+        "id": "contract"
+      },
+      "end": {
+        "id": "provider"
+      },
+      "endArrowhead": "arrow",
+      "createdAt": "2026-08-14T00:24:51.639Z",
+      "updatedAt": "2026-08-14T00:25:39.750Z",
+      "version": 2
+    },
+    {
+      "id": "a-provider-nav",
+      "type": "arrow",
+      "x": 657.7210240208552,
+      "y": 682.4117350522296,
+      "strokeColor": "#1971c2",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -206.1397224603151,
+          65.17652989554085
+        ]
+      ],
+      "start": {
+        "id": "provider"
+      },
+      "end": {
+        "id": "navigation"
+      },
+      "endArrowhead": "arrow",
+      "createdAt": "2026-08-14T00:24:51.639Z",
+      "updatedAt": "2026-08-14T00:24:51.639Z",
+      "version": 1
+    },
+    {
+      "id": "a-provider-display",
+      "type": "arrow",
+      "x": 847.8767147179587,
+      "y": 685.4630710245168,
+      "strokeColor": "#1971c2",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -52.49761548242907,
+          49.073857950966385
+        ]
+      ],
+      "start": {
+        "id": "provider"
+      },
+      "end": {
+        "id": "display"
+      },
+      "endArrowhead": "arrow",
+      "createdAt": "2026-08-14T00:24:51.640Z",
+      "updatedAt": "2026-08-14T11:49:26.271Z",
+      "version": 6
+    },
+    {
+      "id": "a-provider-context",
+      "type": "arrow",
+      "x": 1047.814520875022,
+      "y": 685.591463582408,
+      "strokeColor": "#1971c2",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          60.18491173832808,
+          58.817072835184035
+        ]
+      ],
+      "start": {
+        "id": "provider"
+      },
+      "end": {
+        "id": "context"
+      },
+      "endArrowhead": "arrow",
+      "createdAt": "2026-08-14T00:24:51.640Z",
+      "updatedAt": "2026-08-14T00:24:51.640Z",
+      "version": 1
+    },
+    {
+      "id": "zone-cli",
+      "type": "rectangle",
+      "x": 1490,
+      "y": 420,
+      "width": 590,
+      "height": 500,
+      "backgroundColor": "#eebefa",
+      "strokeColor": "#9c36b5",
+      "strokeWidth": 1,
+      "roughness": 0,
+      "opacity": 25,
+      "createdAt": "2026-08-14T00:24:51.641Z",
+      "updatedAt": "2026-08-14T00:24:51.641Z",
+      "version": 1
+    },
+    {
+      "id": "label-cli",
+      "type": "text",
+      "x": 1520,
+      "y": 440,
+      "width": 510,
+      "height": 26,
+      "strokeColor": "#9c36b5",
+      "text": "ENGIWARE CLI | Python process and transport",
+      "fontSize": 20,
+      "fontFamily": 2,
+      "createdAt": "2026-08-14T00:24:51.641Z",
+      "updatedAt": "2026-08-14T00:24:51.641Z",
+      "version": 1
+    },
+    {
+      "id": "sidecar",
+      "type": "rectangle",
+      "x": 1540,
+      "y": 490,
+      "width": 490,
+      "height": 220,
+      "backgroundColor": "#eebefa",
+      "strokeColor": "#9c36b5",
+      "strokeWidth": 3,
+      "roughness": 0,
+      "label": {
+        "text": "EngiwareDomainHost.start / makeClient\npackages/cli/src/services/\nengiware-domain-host.ts\nRECOVERY_INDEX optional default\nFLUX_DEEP_PROJECT enables import-ready host\nDOMAIN_HOST_COMMAND optional\nspawn -> readiness (15s) -> hello (15s)\nrequest IDs + pending map\nclose -> SIGTERM finalizer"
+      },
+      "fontSize": 16,
+      "fontFamily": 3,
+      "createdAt": "2026-08-14T00:24:51.641Z",
+      "updatedAt": "2026-08-14T03:05:34.909Z",
+      "version": 4
+    },
+    {
+      "id": "transport",
+      "type": "rectangle",
+      "x": 1540,
+      "y": 750,
+      "width": 490,
+      "height": 110,
+      "backgroundColor": "#ffffff",
+      "strokeColor": "#9c36b5",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "label": {
+        "text": "bounded NDJSON over stdio\n1 MiB requests | 32 MiB responses\nUTF-8 | LF / CRLF | exactly 1 result/error"
+      },
+      "fontSize": 16,
+      "fontFamily": 3,
+      "createdAt": "2026-08-14T00:24:51.641Z",
+      "updatedAt": "2026-08-14T00:52:18.734Z",
+      "version": 2
+    },
+    {
+      "id": "a-provider-sidecar",
+      "type": "arrow",
+      "x": 1347.999426358812,
+      "y": 594.766460195914,
+      "strokeColor": "#9c36b5",
+      "strokeWidth": 3,
+      "roughness": 0,
+      "label": {
+        "text": ""
+      },
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          184.00114728237622,
+          2.2036065542798724
+        ]
+      ],
+      "start": {
+        "id": "provider"
+      },
+      "end": {
+        "id": "sidecar"
+      },
+      "startArrowhead": "arrow",
+      "endArrowhead": "arrow",
+      "createdAt": "2026-08-14T00:24:51.642Z",
+      "updatedAt": "2026-08-14T00:25:39.755Z",
+      "version": 3
+    },
+    {
+      "id": "a-sidecar-transport",
+      "type": "arrow",
+      "x": 1785,
+      "y": 718,
+      "strokeColor": "#9c36b5",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          24
+        ]
+      ],
+      "start": {
+        "id": "sidecar"
+      },
+      "end": {
+        "id": "transport"
+      },
+      "endArrowhead": "arrow",
+      "createdAt": "2026-08-14T00:24:51.642Z",
+      "updatedAt": "2026-08-14T00:25:16.363Z",
+      "version": 2
+    },
+    {
+      "id": "zone-flux",
+      "type": "rectangle",
+      "x": 40,
+      "y": 960,
+      "width": 2040,
+      "height": 430,
+      "backgroundColor": "#99e9f2",
+      "strokeColor": "#0c8599",
+      "strokeWidth": 1,
+      "roughness": 0,
+      "opacity": 25,
+      "createdAt": "2026-08-14T00:24:51.642Z",
+      "updatedAt": "2026-08-14T00:24:51.642Z",
+      "version": 1
+    },
+    {
+      "id": "label-flux",
+      "type": "text",
+      "x": 70,
+      "y": 980,
+      "width": 850,
+      "height": 26,
+      "strokeColor": "#0c8599",
+      "text": "FLUX DEEP | recovery-index and PLC semantic authority",
+      "fontSize": 20,
+      "fontFamily": 2,
+      "createdAt": "2026-08-14T00:24:51.642Z",
+      "updatedAt": "2026-08-14T00:24:51.642Z",
+      "version": 1
+    },
+    {
+      "id": "authorities",
+      "type": "rectangle",
+      "x": 80,
+      "y": 1050,
+      "width": 700,
+      "height": 260,
+      "backgroundColor": "#ffffff",
+      "strokeColor": "#0c8599",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "label": {
+        "text": "src/flux_deep/plc/mine_recovery.py\ncatalogs | inventories | integrity checks\n\nsrc/flux_deep/plc/adapters/mine_recovery.py\nlazy Flux.mine bridge\n\nsrc/flux_deep/ladder/render_terminal.py\ndeterministic summary/detail text, spans,\ncomponent placement, recovered power styles"
+      },
+      "fontSize": 16,
+      "fontFamily": 3,
+      "createdAt": "2026-08-14T00:24:51.642Z",
+      "updatedAt": "2026-08-14T00:25:16.384Z",
+      "version": 2
+    },
+    {
+      "id": "browser",
+      "type": "rectangle",
+      "x": 900,
+      "y": 1040,
+      "width": 520,
+      "height": 280,
+      "backgroundColor": "#99e9f2",
+      "strokeColor": "#0c8599",
+      "strokeWidth": 3,
+      "roughness": 0,
+      "label": {
+        "text": "RecoveryBrowserSession + import boundary\nsrc/flux_deep/plc/recovery_browser.py\nmine_recovery.build_l5x_recovery_index\n\nprivate temporary recovery index\ncandidate build + DTO before atomic swap\nlazy routine lifetime; cleanup on replace/exit\nterminal-cell-v1 rows, hits, context, status"
+      },
+      "fontSize": 16,
+      "fontFamily": 3,
+      "createdAt": "2026-08-14T00:24:51.642Z",
+      "updatedAt": "2026-08-14T03:05:34.948Z",
+      "version": 5
+    },
+    {
+      "id": "host",
+      "type": "rectangle",
+      "x": 1540,
+      "y": 1040,
+      "width": 490,
+      "height": 180,
+      "backgroundColor": "#99e9f2",
+      "strokeColor": "#0c8599",
+      "strokeWidth": 3,
+      "roughness": 0,
+      "label": {
+        "text": "flux-deep-domain-host\nsrc/flux_deep/domain_host.py\nmain | serve | dispatch | cleanup\nhost.hello | plc.open | importL5x\nopenRoutine | setMode | move | select | close\nstrict validation; optional startup index"
+      },
+      "fontSize": 16,
+      "fontFamily": 3,
+      "createdAt": "2026-08-14T00:24:51.642Z",
+      "updatedAt": "2026-08-14T03:05:34.919Z",
+      "version": 3
+    },
+    {
+      "id": "rules",
+      "type": "rectangle",
+      "x": 1540,
+      "y": 1260,
+      "width": 490,
+      "height": 90,
+      "backgroundColor": "#ffffff",
+      "strokeColor": "#0c8599",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "label": {
+        "text": "read-only: authority none\neditable false | executable false\nRLL only in this slice"
+      },
+      "fontSize": 16,
+      "fontFamily": 3,
+      "createdAt": "2026-08-14T00:24:51.643Z",
+      "updatedAt": "2026-08-14T00:24:51.643Z",
+      "version": 1
+    },
+    {
+      "id": "a-transport-host",
+      "type": "arrow",
+      "x": 1785,
+      "y": 868,
+      "strokeColor": "#9c36b5",
+      "strokeWidth": 3,
+      "roughness": 0,
+      "label": {
+        "text": ""
+      },
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          164
+        ]
+      ],
+      "start": {
+        "id": "transport"
+      },
+      "end": {
+        "id": "host"
+      },
+      "startArrowhead": "arrow",
+      "endArrowhead": "arrow",
+      "createdAt": "2026-08-14T00:24:51.643Z",
+      "updatedAt": "2026-08-14T00:25:39.758Z",
+      "version": 2
+    },
+    {
+      "id": "a-host-browser",
+      "type": "arrow",
+      "x": 1532.025477771711,
+      "y": 1150.2379617782633,
+      "strokeColor": "#0c8599",
+      "strokeWidth": 3,
+      "roughness": 0,
+      "label": {
+        "text": ""
+      },
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -104.05095554342188,
+          8.324076443473587
+        ]
+      ],
+      "start": {
+        "id": "host"
+      },
+      "end": {
+        "id": "browser"
+      },
+      "startArrowhead": "arrow",
+      "endArrowhead": "arrow",
+      "createdAt": "2026-08-14T00:24:51.646Z",
+      "updatedAt": "2026-08-14T00:25:39.761Z",
+      "version": 2
+    },
+    {
+      "id": "a-browser-authorities",
+      "type": "arrow",
+      "x": 892,
+      "y": 1180,
+      "strokeColor": "#0c8599",
+      "strokeWidth": 3,
+      "roughness": 0,
+      "label": {
+        "text": ""
+      },
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          -104,
+          0
+        ]
+      ],
+      "start": {
+        "id": "browser"
+      },
+      "end": {
+        "id": "authorities"
+      },
+      "startArrowhead": "arrow",
+      "endArrowhead": "arrow",
+      "createdAt": "2026-08-14T00:24:51.647Z",
+      "updatedAt": "2026-08-14T00:25:39.766Z",
+      "version": 2
+    },
+    {
+      "id": "a-host-rules",
+      "type": "arrow",
+      "x": 1785,
+      "y": 1228,
+      "strokeColor": "#0c8599",
+      "strokeWidth": 2,
+      "roughness": 0,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          24
+        ]
+      ],
+      "start": {
+        "id": "host"
+      },
+      "end": {
+        "id": "rules"
+      },
+      "endArrowhead": "arrow",
+      "createdAt": "2026-08-14T00:24:51.647Z",
+      "updatedAt": "2026-08-14T00:24:51.647Z",
+      "version": 1
+    },
+    {
+      "id": "deferred-title",
+      "type": "text",
+      "x": 70,
+      "y": 1440,
+      "width": 320,
+      "height": 26,
+      "strokeColor": "#e03131",
+      "text": "DEFERRED BOUNDARY",
+      "fontSize": 20,
+      "fontFamily": 2,
+      "createdAt": "2026-08-14T00:24:51.647Z",
+      "updatedAt": "2026-08-14T00:24:51.647Z",
+      "version": 1
+    },
+    {
+      "id": "deferred",
+      "type": "rectangle",
+      "x": 40,
+      "y": 1480,
+      "width": 2040,
+      "height": 100,
+      "backgroundColor": "#ffc9c9",
+      "strokeColor": "#e03131",
+      "strokeWidth": 2,
+      "strokeStyle": "dashed",
+      "roughness": 0,
+      "opacity": 65,
+      "label": {
+        "text": "editing / write authority | runtime execution | FBD, ST, SFC | prompt context attachment | context mutation | host restart / capability negotiation | shared app registry"
+      },
+      "fontSize": 17,
+      "fontFamily": 3,
+      "createdAt": "2026-08-14T00:24:51.647Z",
+      "updatedAt": "2026-08-14T00:24:51.647Z",
+      "version": 1
+    }
+  ],
+  "appState": {
+    "viewBackgroundColor": "#ffffff",
+    "gridSize": null
+  },
+  "files": {}
+}

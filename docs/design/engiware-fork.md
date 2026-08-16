@@ -4,25 +4,29 @@
 
 Engiware is a product fork of the OpenCode V2 beta branch. The fork keeps OpenCode as the authoritative agent and session platform while adding an engineering workspace to its terminal and web clients.
 
-The initial fork is intentionally presentation-only. It does not yet integrate Flux Deep PLC, Flux Deep Schematics, Flux Panel, or Flux Build domain behavior.
+The terminal client includes a read-only PLC recovery-browser slice backed by an optional Engiware domain client. `/plc <file>` can build a temporary recovery index from any valid local L5X and replace the active PLC atomically. Flux Deep PLC remains the domain authority; Schematics, Panel, Build, editing, and context attachment are not integrated.
 
 ## Source Lineage
 
 - Upstream: `https://github.com/anomalyco/opencode.git`
 - Upstream branch: `v2`
 - Initial base commit: `66c29675202797b926d20c9c4cbe864e722c3c3a`
-- Engiware branch: `engiware-wireframe`
+- Engiware branch: `engiware-v2`
 - Intended fork repository: `https://github.com/GreenPipePartners/ENGIWARE`
 
 OpenCode V1 compatibility packages are not the base for this work.
 
 ## Product Layout
 
-The terminal session is divided into an upper engineering region and the existing OpenCode session region.
+Home retains the centered Engiware/OpenCode logo and always-focused composer. It does not show the engineering menu unless an application such as PLC is explicitly requested.
+
+When a generic prompt enters a terminal Session without selecting an engineering application, the engineering region shows a fallback menu inside the same Project Tree, Engineering Workstation, and Context panes used by every application. Project Tree shows recent projects, Engineering Workstation shows six command-backed options (PLC, Schematics, Displays, Panels, Build, and OpenCode), and Context explains the current selection or unavailable adapter. Clicking an option injects its slash command and returns focus to the composer rather than opening the application immediately.
+
+After `/plc`, the terminal session is divided into an upper engineering region and the existing OpenCode session region.
 
 ```text
 +------------------------------------------------------------------+
-| Navigation |              Engineering Display          | Context |
+| Project Tree |          Engineering Workstation        | Context |
 |            |                                           |         |
 |            |                                           |         |
 +------------------------------------------------------------------+
@@ -30,26 +34,29 @@ The terminal session is divided into an upper engineering region and the existin
 +------------------------------------------------------------------+
 ```
 
-The upper engineering region receives approximately three quarters of the available session height. The native OpenCode session remains in the lower quarter. At narrow terminal widths, the side panes are hidden and the engineering display remains visible.
+The expanded engineering region receives approximately three quarters of the available session height. The native OpenCode session remains in the lower quarter. At narrow terminal widths, the side panes are hidden and the engineering display remains visible. `/opencode` collapses engineering to a one-line restore header so native OpenCode receives the remaining space; `/engineering` restores the launcher.
 
 ## EngiwareShell Boundary
 
-`EngiwareShell` is the fork-owned boundary between OpenCode's session route and Engiware's engineering features.
+`EngiwareShell` is the fork-owned module selector between OpenCode routes and Engiware's engineering features. First-class pane containers and the workspace module contract sit below it.
 
 ```tsx
-<EngiwareShell sessionID={route.sessionID} />
+<EngiwareShell sessionID={route.sessionID} recentProjects={recentProjects()} />
 ```
 
-The OpenCode session route supplies only the active `sessionID`. It does not know which engineering application is active or how engineering data is rendered.
+OpenCode routes supply layout inputs such as the renderable ID, recent-project presentation, and available width. They do not know which engineering application is active or how engineering data is rendered.
 
 Current implementation:
 
 - `packages/tui/src/engiware/shell/engiware-shell.tsx`
+- `packages/tui/src/engiware/shell/workspace.tsx`
+- `packages/tui/src/engiware/application/module.ts`
+- Mounted conditionally by `packages/tui/src/routes/home.tsx` after explicit PLC intent
 - Mounted by `packages/tui/src/routes/session/index.tsx`
 
-### Navigation Pane
+### Project Tree Pane
 
-The left pane will own navigation within the active engineering application.
+The left pane owns navigation within the active engineering application.
 
 Examples include:
 
@@ -60,9 +67,9 @@ Examples include:
 
 The navigation UI should consume generic navigation nodes supplied by an application adapter. It should not embed PLC-specific or schematic-specific domain rules in the shell.
 
-### Engineering Display
+### Engineering Workstation
 
-The middle pane is the active application view host.
+The middle pane is the active application view host. Its module interface owns target activation, display rendering, and header actions. The current PLC view renders domain-supplied terminal rows and segments and delegates selection and mode changes to the domain client.
 
 Planned views include:
 
@@ -71,11 +78,11 @@ Planned views include:
 - Panel display
 - Build and artifact display
 
-Only one active application view is required initially. The shell will later select views through a small application-view registry rather than hard-coded conditionals in the OpenCode session route.
+The shell selects first-party menu, PLC, and Ignition workspace modules through the same `EngiwareWorkspaceModule` interface. Adding another first-party application requires a module adapter rather than new pane framing or route conditionals.
 
 ### Context Pane
 
-The right pane will show and modify the context associated with the active engineering selection.
+The right pane currently shows read-only context and source/authority status associated with the active engineering projection.
 
 Planned responsibilities include:
 
@@ -97,9 +104,13 @@ OpenCode Session Route
 EngiwareShell
         |
         v
-Application View Contract
+First-Class Pane Containers
+        |
+        v
+EngiwareWorkspaceModule
         |
         +--> PLC Adapter --------> Flux Deep PLC authority
+        +--> Ignition Adapter ---> Flux Deep Ignition authority
         +--> Schematics Adapter -> Flux Deep Schematics authority
         +--> Panel Adapter ------> Flux Panel authority
         +--> Build Adapter ------> Flux Build authority
@@ -107,9 +118,9 @@ Application View Contract
 
 Rules:
 
-1. The OpenCode session route may import `EngiwareShell`, but it must not import application adapters.
-2. `EngiwareShell` owns pane layout and responsive behavior, not engineering semantics.
-3. Application adapters own application navigation, display projections, selections, and context generation.
+1. OpenCode Home and Session routes may import `EngiwareShell`, but they must not import application adapters.
+2. First-class pane containers own frame/header layout and responsive behavior, not engineering semantics.
+3. Workspace modules own application navigation, workstation activation/display/actions, selections, and Context rendering.
 4. OpenCode remains authoritative for sessions, messages, tools, permissions, questions, and forms.
 5. Engiware must not duplicate OpenCode's transcript, composer, or session execution state.
 6. Domain authority remains in each Flux application until a deliberate migration replaces it.
@@ -118,11 +129,17 @@ Rules:
 
 ### Terminal Client
 
-- Added a three-pane Engiware engineering shell above the native OpenCode session.
+- Restored the centered logo/composer Home intro while keeping engineering slash commands available.
+- Added a recent-project and six-context Session fallback menu using the standard three-pane frame.
+- Added a lazy three-pane PLC shell that opens only through explicit prompt/slash intent.
+- Added `/plc <file>` path resolution and atomic Flux Deep L5X import without requiring a startup recovery index.
 - Extracted that shell from the large OpenCode session route into `EngiwareShell`.
 - Preserved the native OpenCode transcript, tools, permission/form prompts, queue behavior, and composer.
-- Added responsive behavior that hides Navigation and Context below 64 columns.
-- Added the Flux Deep PLC text logo above the OpenCode logo on the initial screen.
+- Kept engineering panes non-focusable and moved projection modes to local slash commands.
+- Added clickable Summary/Detail workstation labels and a clickable `/context` header with toggleable Context visibility.
+- Added a collapsed engineering header that lets native OpenCode reclaim the session height.
+- Added responsive behavior that hides Project Tree and Context below 64 columns.
+- Preserved the Flux Deep PLC and OpenCode logos in expanded OpenCode Home mode.
 - Added OpenCode-inspired structural coloring to that logo.
 - Added the attribution text `Adapted from the amazing` above the OpenCode logo.
 
@@ -137,34 +154,27 @@ The web layout is still a prototype and has not yet been extracted into the same
 
 ### Tests
 
-- Added direct `EngiwareShell` wide and narrow layout tests.
+- Added direct launcher, composer-focus, lazy-open, slash-command, mouse-interaction, and responsive shell tests.
 - Added Engiware logo visibility and character-frame tests.
 - Added session lifecycle assertions proving the Engiware regions render around a real session.
 - Added web browser assertions for desktop and narrow responsive layouts.
 
 ## Deliberately Not Implemented
 
-- Project or engineering navigation data
-- PLC rendering
+- PLC semantic inference in the TUI
 - Schematic rendering
 - Panel or Build application views
-- Python domain-host process management
-- Selection or context state
 - Context attachment to model prompts
 - Editing or domain mutation
 - New OpenCode server APIs
 
-## Next Architecture Step
+## Implemented PLC Slice
 
-Define the smallest application-view contract before migrating a tree or viewer.
+The first application boundary is now exercised by the read-only PLC recovery browser. It keeps generic pane/controller state in Engiware, process lifecycle in the CLI, and PLC semantics in Flux Deep without adding PLC rules to `EngiwareShell` or the OpenCode session route.
 
-The first contract should describe only:
+The exact function, interface, protocol, ownership, and verification map is documented in:
 
-- Application identity and capabilities
-- Generic navigation nodes
-- Active view identity
-- Read-only display projection
-- Stable selection identity
-- Context preview supplied by the application
+- `docs/design/engiware-plc-recovery-browser.md`
+- `docs/design/engiware-plc-recovery-browser.excalidraw`
 
-The first implementation should then exercise that contract with one narrow PLC vertical slice without adding PLC concepts to `EngiwareShell`.
+Future application adapters should preserve this dependency direction while defining only the additional capabilities their vertical slice requires.
