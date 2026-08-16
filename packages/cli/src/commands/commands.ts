@@ -47,6 +47,10 @@ const Root = Spec.make(typeof OPENCODE_CLI_NAME === "string" ? OPENCODE_CLI_NAME
       Flag.optional,
     ),
     prompt: Flag.string("prompt").pipe(Flag.withDescription("Prompt to use"), Flag.optional),
+    engibook: Flag.string("engibook").pipe(
+      Flag.withDescription("Prepare a review-only .engibook bundle for /engibook"),
+      Flag.optional,
+    ),
   },
   commands: [
     Spec.make("acp", { description: "Start an Agent Client Protocol server" }),

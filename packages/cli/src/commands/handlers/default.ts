@@ -10,10 +10,16 @@ import { Updater } from "../../services/updater"
 import { UpdatePreflight } from "../../services/update-preflight"
 import { Npm } from "@opencode-ai/util/npm"
 import { OPENCODE_CHANNEL, OPENCODE_VERSION } from "../../version"
+import { EngiwareDomainHost } from "../../services/engiware-domain-host"
+import { EngiwareIgnitionDomainHost } from "../../services/engiware-ignition-domain-host"
+import { EngiwareEngibookHost } from "../../services/engiware-engibook-host"
+import path from "node:path"
 
 export default Runtime.handler(Commands, (input) =>
   Effect.gen(function* () {
     const requestedDirectory = Option.getOrUndefined(input.directory)
+    const requestedEngibook = Option.getOrUndefined(input.engibook)
+    const engibookPath = requestedEngibook === undefined ? undefined : path.resolve(requestedEngibook)
     if (requestedDirectory !== undefined) process.chdir(requestedDirectory)
     const preflight = UpdatePreflight.make()
     yield* Effect.addFinalizer(() => Effect.promise(() => preflight.close()))
@@ -36,6 +42,26 @@ export default Runtime.handler(Commands, (input) =>
     )
     const updater = yield* Updater.Service
     yield* updater.check().pipe(Effect.forkScoped)
+    const [engiware, ignition, engibook] = yield* Effect.all(
+      [
+        EngiwareDomainHost.start().pipe(
+          Effect.catch((cause) =>
+            Effect.logWarning("Failed to start Engiware domain host", { cause }).pipe(Effect.as(undefined)),
+          ),
+        ),
+        EngiwareIgnitionDomainHost.start().pipe(
+          Effect.catch((cause) =>
+            Effect.logWarning("Failed to start Engiware Ignition domain host", { cause }).pipe(Effect.as(undefined)),
+          ),
+        ),
+        EngiwareEngibookHost.start(engibookPath ? { bundle: engibookPath } : undefined).pipe(
+          Effect.catch((cause) =>
+            Effect.logWarning("Failed to start Engiware Engibook host", { cause }).pipe(Effect.as(undefined)),
+          ),
+        ),
+      ],
+      { concurrency: "unbounded" },
+    )
     preflight.loading()
     const config = yield* Config.Service
     const npm = yield* Npm.Service
@@ -51,6 +77,9 @@ export default Runtime.handler(Commands, (input) =>
         version: OPENCODE_VERSION,
         channel: process.env.OPENCODE_TUI_CHANNEL ?? OPENCODE_CHANNEL,
       },
+      engiware,
+      ignition,
+      engibook,
       server: {
         endpoint: server.endpoint,
         service: service
