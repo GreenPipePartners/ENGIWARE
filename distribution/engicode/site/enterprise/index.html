@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Contact EngiWare about private, organization-wide deployments for OT engineering teams."
+    />
+    <meta name="theme-color" content="#07110e" />
+    <link rel="icon" href="/logo.png" type="image/png" />
+    <link rel="stylesheet" href="/legal/legal.css" />
+    <link rel="stylesheet" href="/enterprise/enterprise.css" />
+    <title>EngiWare | Enterprise</title>
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">
+        <nav class="nav" aria-label="Primary navigation">
+          <a class="brand" href="/" aria-label="EngiWare home">
+            <img class="brand-logo" src="/logo.png" width="763" height="406" alt="EngiWare" />
+          </a>
+          <button class="menu-toggle" type="button" aria-label="Open navigation" aria-controls="site-menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+          </button>
+          <div class="nav-links" id="site-menu">
+            <a href="https://github.com/GreenPipePartners/ENGIWARE">GitHub</a>
+            <a href="/enterprise" aria-current="page">Enterprise</a>
+            <a class="nav-download" href="/EngiCodeSetup.exe" download>Download</a>
+          </div>
+        </nav>
+      </header>
+
+      <main class="enterprise-shell">
+        <section class="enterprise-intro" aria-labelledby="enterprise-title">
+          <h1 id="enterprise-title">Your data stays yours.</h1>
+          <p class="enterprise-lede">
+            Bring EngiWare into your organization without giving up control of plant logic, project files, or model access. We can help your OT engineering team evaluate EngiWare and plan an internal deployment around your security requirements.
+          </p>
+          <p class="enterprise-prompt">Tell us what your team is trying to solve.</p>
+        </section>
+
+        <form
+          class="enterprise-form"
+          action="mailto:bobby.miller@greenpipe.partners"
+          method="post"
+          enctype="text/plain"
+          data-enterprise-form
+        >
+          <div class="enterprise-form-heading">
+            <span>ENTERPRISE INQUIRY</span>
+            <h2>Start a conversation</h2>
+          </div>
+
+          <div class="form-grid">
+            <label>
+              <span>Full name</span>
+              <input name="full_name" type="text" autocomplete="name" placeholder="Alex Morgan" required />
+            </label>
+            <label>
+              <span>Role</span>
+              <input name="role" type="text" autocomplete="organization-title" placeholder="Controls Engineering Manager" required />
+            </label>
+            <label>
+              <span>Company</span>
+              <input name="company" type="text" autocomplete="organization" placeholder="Acme Manufacturing" />
+            </label>
+            <label>
+              <span>Company email</span>
+              <input name="email" type="email" autocomplete="email" placeholder="alex@example.com" required />
+            </label>
+            <label class="form-wide">
+              <span>Phone number <small>optional</small></span>
+              <input name="phone" type="tel" autocomplete="tel" placeholder="+1 234 567 8900" />
+            </label>
+            <label class="form-wide">
+              <span>What problem are you trying to solve?</span>
+              <textarea name="message" rows="7" placeholder="We need help with..." required></textarea>
+            </label>
+          </div>
+
+          <button class="enterprise-submit" type="submit">Send inquiry</button>
+          <p class="form-status" data-form-status aria-live="polite"></p>
+        </form>
+      </main>
+
+      <footer class="footer">
+        <p>EngiWare is built on OpenCode by Green Pipe Partners.</p>
+        <div class="footer-links">
+          <a href="https://github.com/GreenPipePartners/ENGIWARE">GitHub</a>
+          <a href="/legal/privacy-policy">Privacy</a>
+          <a href="/legal/terms-of-service">Terms</a>
+        </div>
+      </footer>
+    </div>
+    <script src="/enterprise/enterprise.js" defer></script>
+  </body>
+</html>

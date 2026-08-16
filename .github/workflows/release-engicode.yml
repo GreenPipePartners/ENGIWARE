@@ -1,0 +1,85 @@
+name: Release EngiCode
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version without the leading v
+        required: true
+        type: string
+      publish:
+        description: Publish a GitHub release
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  linux-x64:
+    runs-on: [self-hosted, linux, x64, engicode-builder]
+    env:
+      ENGICODE_WORKSPACE_ROOT: ${{ vars.ENGICODE_WORKSPACE_ROOT }}
+    steps:
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744
+
+      - name: Validate release source workspace
+        run: test -n "$ENGICODE_WORKSPACE_ROOT"
+
+      - name: Build Ubuntu artifacts
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: distribution/engicode/build-ubuntu.sh --version "$RELEASE_VERSION"
+
+      - name: Build Windows installer
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: distribution/engicode/build-windows-installer.sh --version "$RELEASE_VERSION"
+
+      - name: Verify installer contract
+        run: distribution/engicode/test-install.sh
+
+      - name: Verify release archive
+        run: |
+          distribution/engicode/install.sh \
+            --artifact dist/engicode/engicode-linux-x64-baseline.tar.gz \
+            --checksum dist/engicode/SHA256SUMS \
+            --prefix "$RUNNER_TEMP/engicode"
+          distribution/engicode/verify-install.sh "$RUNNER_TEMP/engicode"
+
+      - name: Stage release files
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          cp distribution/engicode/install.sh dist/engicode/install.sh
+          cp distribution/engicode/install.ps1 dist/engicode/install.ps1
+          distribution/engicode/stage-site.sh --version "$RELEASE_VERSION"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: engicode-linux-x64-${{ inputs.version }}
+          path: dist/engicode/*
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: engicode-site-${{ inputs.version }}
+          path: dist/engicode-site/**
+          if-no-files-found: error
+
+      - name: Publish GitHub release
+        if: inputs.publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          gh release create "v$RELEASE_VERSION" \
+            --title "EngiCode $RELEASE_VERSION" \
+            --generate-notes \
+            dist/engicode/engicode-linux-x64.tar.gz \
+            dist/engicode/engicode-linux-x64-baseline.tar.gz \
+            dist/engicode/SHA256SUMS \
+            dist/engicode/install.sh \
+            dist/engicode/install.ps1 \
+            dist/engicode/EngiCodeSetup.exe

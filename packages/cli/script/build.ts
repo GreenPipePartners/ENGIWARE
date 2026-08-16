@@ -11,7 +11,7 @@ import { buildAppArchive } from "./app-assets"
 import { verifyArtifact, verifySimulationGraph } from "./verify-artifact"
 
 const dir = path.resolve(import.meta.dirname, "..")
-const binary = "opencode2"
+const binary = process.env.OPENCODE_CLI_NAME ?? "opencode2"
 const outdir = path.resolve(
   dir,
   process.argv.find((arg) => arg.startsWith("--outdir="))?.slice("--outdir=".length) ?? "dist",
@@ -55,8 +55,9 @@ const targets =
     : singleFlag
       ? allTargets.filter((item) => {
           if (item.os !== process.platform || item.arch !== process.arch) return false
+          if (item.abi !== undefined) return false
           if (item.avx2 === false) return baselineFlag
-          return item.abi === undefined
+          return true
         })
       : allTargets
 if (!targets.length) throw new Error(`Unknown build target: ${requestedTarget}`)
@@ -109,7 +110,7 @@ for (const item of targets) {
     external: ["node-gyp"],
     format: "esm",
     minify: true,
-    sourcemap: "inline",
+    sourcemap: process.env.OPENCODE_SOURCEMAP === "none" ? "none" : "inline",
     splitting: true,
     compile: {
       autoloadBunfig: false,

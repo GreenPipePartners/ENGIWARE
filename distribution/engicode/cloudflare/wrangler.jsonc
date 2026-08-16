@@ -1,0 +1,42 @@
+{
+  "$schema": "../../../packages/www/node_modules/wrangler/config-schema.json",
+  "name": "engicode-site-preview",
+  "main": "worker.js",
+  "compatibility_date": "2026-07-15",
+  "workers_dev": true,
+  "preview_urls": true,
+  "minify": true,
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 0.01
+  },
+  "r2_buckets": [
+    {
+      "binding": "SITE",
+      "bucket_name": "engicode-site"
+    }
+  ],
+  "env": {
+    "production": {
+      "name": "engicode-site",
+      "workers_dev": false,
+      "preview_urls": false,
+      "routes": [
+        {
+          "pattern": "engiware.org",
+          "custom_domain": true
+        },
+        {
+          "pattern": "www.engiware.org",
+          "custom_domain": true
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "SITE",
+          "bucket_name": "engicode-site"
+        }
+      ]
+    }
+  }
+}

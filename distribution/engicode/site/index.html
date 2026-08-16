@@ -1,0 +1,1211 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="EngiWare is the AI agent for automation, controls, and electrical engineering workflows."
+    />
+    <meta name="theme-color" content="#07110e" />
+    <link rel="icon" href="/logo.png" type="image/png" />
+    <title>EngiWare | The AI Agent for Engineers</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --background: #07110e;
+        --background-weak: #17231f;
+        --background-hover: #222e2a;
+        --background-strong: #0d241d;
+        --text: #8da69b;
+        --text-strong: #edf8f1;
+        --text-weak: #8da69b;
+        --border: #3e4543;
+        --border-subtle: #303936;
+        --green: #43a66f;
+        --green-bright: #69e69d;
+        --green-light: #9be3ba;
+        --green-dark: #0d241d;
+        --page-width: 1080px;
+        --page-padding: 80px;
+        --section-padding: 64px;
+        font-family: "IBM Plex Mono", "Berkeley Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+        font-synthesis: none;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--background);
+        color: var(--text);
+        font-size: 16px;
+        line-height: 1.5;
+      }
+
+      button,
+      code {
+        font: inherit;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      a:hover,
+      a:focus-visible {
+        color: var(--green-light);
+      }
+
+      button:focus-visible,
+      summary:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--green-light);
+        outline-offset: 4px;
+      }
+
+      .page {
+        width: min(var(--page-width), 100%);
+        margin: 0 auto 80px;
+        border-right: 1px solid var(--border-subtle);
+        border-bottom: 1px solid var(--border-subtle);
+        border-left: 1px solid var(--border-subtle);
+      }
+
+      .site-header {
+        position: sticky;
+        z-index: 10;
+        top: 0;
+        border-top: 1px solid var(--border-subtle);
+        border-bottom: 1px solid var(--border-subtle);
+        background: var(--background);
+      }
+
+      .nav {
+        display: flex;
+        min-height: 104px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 32px;
+        padding: 10px var(--page-padding);
+      }
+
+      .brand {
+        display: inline-flex;
+        min-width: 152px;
+        color: var(--text-strong);
+      }
+
+      .brand-logo {
+        display: block;
+        width: 112px;
+        height: auto;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        color: var(--text-strong);
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .nav-download {
+        padding: 9px 14px;
+        border: 1px solid var(--green-dark);
+        border-radius: 4px;
+        background: var(--green-dark);
+        color: var(--green-light);
+      }
+
+      .nav-download:hover {
+        border-color: var(--green);
+        background: var(--background-hover);
+      }
+
+      .menu-toggle {
+        display: none;
+        width: 42px;
+        height: 42px;
+        place-content: center;
+        gap: 5px;
+        padding: 0;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .menu-toggle span {
+        display: block;
+        width: 20px;
+        height: 2px;
+        background: var(--text-strong);
+      }
+
+      .hero {
+        min-height: 620px;
+        padding: 96px var(--page-padding) 88px;
+      }
+
+      h1,
+      h2,
+      p {
+        margin-top: 0;
+      }
+
+      h1,
+      h2 {
+        color: var(--text-strong);
+        letter-spacing: -0.045em;
+      }
+
+      h1 {
+        max-width: 780px;
+        margin-bottom: 22px;
+        font-size: clamp(30px, 4vw, 42px);
+        line-height: 1.05;
+      }
+
+      .hero-copy {
+        max-width: 820px;
+        margin-bottom: 64px;
+        color: var(--text);
+        font-size: 15px;
+        line-height: 1.8;
+      }
+
+      .hero-copy-line {
+        white-space: nowrap;
+      }
+
+      .install {
+        max-width: 760px;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 40px;
+        padding: 0 20px;
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        border-bottom: 0;
+        border-radius: 6px 6px 0 0;
+        background: var(--background-weak);
+      }
+
+      .tab {
+        padding: 16px 0 14px;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        background: transparent;
+        color: var(--text-weak);
+        cursor: pointer;
+        font-size: 13px;
+      }
+
+      .tab[aria-selected="true"] {
+        border-bottom-color: var(--green-light);
+        color: var(--text-strong);
+      }
+
+      .install-panel {
+        min-height: 94px;
+        padding: 16px;
+        border: 1px solid var(--border);
+        border-radius: 0 0 6px 6px;
+        background: var(--background-weak);
+      }
+
+      .command {
+        display: flex;
+        width: 100%;
+        min-height: 60px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 10px 14px;
+        border: 0;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--text-strong);
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .command:hover {
+        background: var(--background-hover);
+      }
+
+      .command code {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .command-prefix {
+        color: var(--text-weak);
+      }
+
+      .command-url {
+        color: var(--green-light);
+        font-weight: 600;
+      }
+
+      .copy-label {
+        flex: 0 0 auto;
+        color: var(--text-weak);
+        font-size: 12px;
+      }
+
+      .command[data-copied="true"] .copy-label {
+        color: var(--green-light);
+      }
+
+      .windows-download {
+        display: flex;
+        min-height: 58px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 12px 16px;
+        border: 1px solid var(--green-dark);
+        border-radius: 4px;
+        background: var(--green-dark);
+        color: var(--text-strong);
+      }
+
+      .windows-download:hover {
+        border-color: var(--green);
+        background: var(--background-hover);
+      }
+
+      .windows-download strong,
+      .windows-download small {
+        display: block;
+      }
+
+      .windows-download strong {
+        margin-bottom: 3px;
+        color: var(--green-light);
+      }
+
+      .windows-download small,
+      .download-type {
+        color: var(--text-weak);
+        font-size: 12px;
+      }
+
+      .command-secondary {
+        min-height: 42px;
+        margin-top: 6px;
+      }
+
+      .section {
+        padding: var(--section-padding) var(--page-padding);
+        border-top: 1px solid var(--border-subtle);
+      }
+
+      .context-flow {
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .context-diagram {
+        position: relative;
+        isolation: isolate;
+        margin: 0;
+        overflow: hidden;
+        background: var(--background-weak);
+      }
+
+      .context-diagram::before {
+        position: absolute;
+        z-index: -1;
+        inset: 0;
+        background-image:
+          linear-gradient(var(--border-subtle) 1px, transparent 1px),
+          linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px);
+        background-size: 28px 28px;
+        content: "";
+        opacity: 0.3;
+      }
+
+      .context-beams {
+        position: absolute;
+        z-index: 1;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        pointer-events: none;
+      }
+
+      .context-beam-line {
+        fill: none;
+        stroke: var(--green);
+        stroke-width: 1.25;
+        opacity: 0.42;
+        vector-effect: non-scaling-stroke;
+      }
+
+      .context-beam-pulse {
+        fill: var(--green-bright);
+        filter: drop-shadow(0 0 5px rgba(105, 230, 157, 0.8));
+      }
+
+      .context-beam-pulse-return {
+        fill: var(--green-light);
+        opacity: 0.74;
+      }
+
+      .context-diagram-grid {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        min-height: 560px;
+        grid-template-columns: minmax(0, 1fr) 210px minmax(0, 1fr);
+        gap: 54px;
+        align-items: center;
+        padding: 64px 48px;
+      }
+
+      .context-zone {
+        min-width: 0;
+      }
+
+      .context-zone-title {
+        display: block;
+        margin-bottom: 15px;
+        color: var(--text-weak);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+      }
+
+      .context-zone-models .context-zone-title {
+        text-align: right;
+      }
+
+      .context-nodes {
+        display: grid;
+        gap: 14px;
+      }
+
+      .context-node {
+        display: flex;
+        min-width: 0;
+        min-height: 64px;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border: 1px solid var(--border-subtle);
+        border-radius: 5px;
+        background: rgba(7, 17, 14, 0.92);
+      }
+
+      .context-node-icon {
+        display: grid;
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
+        place-items: center;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: var(--green-dark);
+        color: var(--green-light);
+      }
+
+      .context-node-icon svg,
+      .context-node-icon img {
+        width: 22px;
+        height: 22px;
+      }
+
+      .context-node-icon img {
+        display: block;
+        object-fit: contain;
+      }
+
+      .context-node-copy {
+        min-width: 0;
+      }
+
+      .context-node strong,
+      .context-node small {
+        display: block;
+      }
+
+      .context-node strong {
+        margin-bottom: 3px;
+        color: var(--text-strong);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .context-node small {
+        overflow: hidden;
+        color: var(--text-weak);
+        font-size: 9px;
+        line-height: 1.4;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .context-zone-models .context-node {
+        flex-direction: row-reverse;
+        text-align: right;
+      }
+
+      .context-machine {
+        position: relative;
+        display: grid;
+        min-height: 246px;
+        place-items: center;
+        align-content: center;
+        gap: 14px;
+        padding: 24px 18px;
+        border: 1px solid var(--green);
+        border-radius: 6px;
+        background: #091712;
+        box-shadow:
+          0 0 0 7px rgba(67, 166, 111, 0.08),
+          0 0 32px rgba(67, 166, 111, 0.16);
+        text-align: center;
+      }
+
+      .context-machine::before {
+        position: absolute;
+        inset: 8px;
+        border: 1px solid var(--border-subtle);
+        border-radius: 3px;
+        content: "";
+        pointer-events: none;
+      }
+
+      .context-machine-eyebrow {
+        color: var(--green-bright);
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+      }
+
+      .context-machine-logo {
+        display: grid;
+        width: 150px;
+        height: 84px;
+        place-items: center;
+        border-top: 1px solid var(--border-subtle);
+        border-bottom: 1px solid var(--border-subtle);
+      }
+
+      .context-machine-logo img {
+        display: block;
+        width: 140px;
+        height: auto;
+      }
+
+      .context-machine-name {
+        color: var(--text-strong);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+
+      .what {
+        display: grid;
+        min-height: 610px;
+        place-content: center;
+      }
+
+      .section-inner {
+        width: 100%;
+        max-width: 850px;
+        margin: 0 auto;
+      }
+
+      h2 {
+        margin-bottom: 28px;
+        font-size: 18px;
+        line-height: 1.35;
+      }
+
+      .section-intro {
+        max-width: 780px;
+        margin-bottom: 34px;
+        line-height: 2;
+      }
+
+      .feature-list {
+        display: grid;
+        gap: 19px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .feature-list li {
+        display: grid;
+        grid-template-columns: 34px 180px minmax(0, 1fr);
+        align-items: baseline;
+        line-height: 1.8;
+      }
+
+      .marker {
+        color: var(--green);
+      }
+
+      .feature-list strong {
+        color: var(--text-strong);
+        font-weight: 600;
+      }
+
+      .privacy {
+        min-height: 300px;
+      }
+
+      .privacy-copy {
+        display: grid;
+        max-width: 820px;
+        grid-template-columns: 34px minmax(0, 1fr);
+        line-height: 2;
+      }
+
+      .privacy-copy p {
+        margin-bottom: 0;
+      }
+
+      .faq {
+        padding-bottom: 80px;
+      }
+
+      .faq h2 {
+        margin-bottom: 42px;
+        text-align: center;
+      }
+
+      details {
+        margin-bottom: 20px;
+      }
+
+      summary {
+        display: grid;
+        min-height: 40px;
+        grid-template-columns: 24px minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+        color: var(--text-strong);
+        cursor: pointer;
+        font-weight: 600;
+        line-height: 1.8;
+        list-style: none;
+      }
+
+      summary::-webkit-details-marker {
+        display: none;
+      }
+
+      summary::before {
+        color: var(--green);
+        content: "+";
+        font-size: 20px;
+        font-weight: 400;
+        line-height: 1.35;
+      }
+
+      details[open] summary::before {
+        content: "-";
+      }
+
+      .answer {
+        max-width: 780px;
+        margin: 4px 0 30px 40px;
+        line-height: 2;
+      }
+
+      .answer a {
+        color: var(--green-light);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
+      .footer {
+        display: flex;
+        min-height: 104px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 24px var(--page-padding);
+        border-top: 1px solid var(--border-subtle);
+        color: var(--text-weak);
+        font-size: 13px;
+      }
+
+      .footer p {
+        margin: 0;
+      }
+
+      .footer-links {
+        display: flex;
+        gap: 24px;
+      }
+
+      [hidden] {
+        display: none;
+      }
+
+      @media (max-width: 960px) {
+        :root {
+          --page-padding: 24px;
+          --section-padding: 48px;
+        }
+
+        body {
+          font-size: 15px;
+        }
+
+        .page {
+          margin-bottom: 0;
+          border-right: 0;
+          border-left: 0;
+        }
+
+        .hero {
+          min-height: 570px;
+          padding-top: 72px;
+        }
+
+        .what {
+          min-height: 540px;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .context-diagram-grid {
+          min-height: 0;
+          grid-template-columns: minmax(0, 1fr);
+          gap: 46px;
+          padding: 32px 18px 28px;
+        }
+
+        .context-zone-title,
+        .context-zone-models .context-zone-title {
+          text-align: center;
+        }
+
+        .context-nodes-plant {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 9px;
+        }
+
+        .context-nodes-models {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 9px;
+        }
+
+        .context-node,
+        .context-zone-models .context-node {
+          min-height: 88px;
+          align-items: center;
+          flex-direction: column;
+          gap: 7px;
+          padding: 9px 6px;
+          text-align: center;
+        }
+
+        .context-node-icon {
+          width: 36px;
+          height: 36px;
+          flex-basis: 36px;
+        }
+
+        .context-node strong {
+          font-size: 10px;
+        }
+
+        .context-node small {
+          white-space: normal;
+        }
+
+        .context-machine {
+          width: min(220px, 82%);
+          min-height: 230px;
+          justify-self: center;
+        }
+
+      }
+
+      @media (max-width: 640px) {
+        .nav {
+          position: relative;
+          min-height: 84px;
+          gap: 16px;
+        }
+
+        .brand {
+          min-width: 0;
+        }
+
+        .brand-logo {
+          width: 200px;
+        }
+
+        .nav-links {
+          position: absolute;
+          z-index: 20;
+          top: calc(100% - 1px);
+          right: var(--page-padding);
+          left: var(--page-padding);
+          display: none;
+          align-items: stretch;
+          gap: 0;
+          padding: 8px;
+          border: 1px solid var(--border);
+          border-radius: 0 0 6px 6px;
+          background: var(--background-weak);
+          flex-direction: column;
+          font-size: 12px;
+        }
+
+        .nav-links[data-open="true"] {
+          display: flex;
+        }
+
+        .nav-links a {
+          padding: 12px;
+        }
+
+        .nav-download {
+          padding: 12px;
+        }
+
+        .menu-toggle {
+          display: grid;
+        }
+
+        h1 {
+          font-size: 27px;
+        }
+
+        .hero-copy {
+          margin-bottom: 48px;
+          font-size: 13px;
+        }
+
+        .tabs {
+          gap: 28px;
+        }
+
+        .command {
+          min-height: 74px;
+          align-items: flex-start;
+        }
+
+        .feature-list li {
+          grid-template-columns: 30px minmax(0, 1fr);
+        }
+
+        .feature-list strong {
+          grid-column: 2;
+        }
+
+        .feature-description {
+          grid-column: 2;
+        }
+
+        .context-diagram-grid {
+          padding-right: 12px;
+          padding-left: 12px;
+        }
+
+        .footer {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .context-beam-pulse {
+          display: none;
+        }
+
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">
+        <nav class="nav" aria-label="Primary navigation">
+          <a class="brand" href="/" aria-label="EngiWare home">
+            <img class="brand-logo" src="/logo.png" width="763" height="406" alt="EngiWare" />
+          </a>
+          <button class="menu-toggle" type="button" aria-label="Open navigation" aria-controls="site-menu" aria-expanded="false">
+            <span></span><span></span><span></span>
+          </button>
+          <div class="nav-links" id="site-menu">
+            <a href="https://github.com/GreenPipePartners/ENGIWARE">GitHub</a>
+            <a href="/enterprise">Enterprise</a>
+            <a class="nav-download" href="/EngiCodeSetup.exe" download>Download</a>
+          </div>
+        </nav>
+      </header>
+
+      <main>
+        <section class="hero" aria-labelledby="hero-title">
+          <h1 id="hero-title">The AI Agent for OT Engineers</h1>
+          <p class="hero-copy">
+            Free models included or connect any model from any provider,<br />
+            <span class="hero-copy-line">including Claude, GPT, Gemini and more.</span>
+          </p>
+
+          <div class="install" aria-label="Install EngiWare">
+            <div class="tabs" role="tablist" aria-label="Installation platform">
+              <button class="tab" id="tab-curl" type="button" role="tab" aria-selected="true" aria-controls="panel-curl">
+                linux
+              </button>
+              <button
+                class="tab"
+                id="tab-powershell"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                aria-controls="panel-powershell"
+              >
+                windows
+              </button>
+            </div>
+            <div class="install-panel" id="panel-curl" role="tabpanel" aria-labelledby="tab-curl">
+              <button class="command" type="button" data-command="curl -fsSL https://engiware.org/install | bash">
+                <code><span class="command-prefix">curl -fsSL </span><span class="command-url">https://engiware.org/install</span><span class="command-prefix"> | bash</span></code>
+                <span class="copy-label">copy</span>
+              </button>
+            </div>
+            <div class="install-panel" id="panel-powershell" role="tabpanel" aria-labelledby="tab-powershell" hidden>
+              <a class="windows-download" href="/EngiCodeSetup.exe" download>
+                <span><strong>Download EngiCode Setup</strong><small>Windows 10 or 11, x64</small></span>
+                <span class="download-type">.exe</span>
+              </a>
+              <button class="command command-secondary" type="button" data-command="irm https://engiware.org/install.ps1 | iex">
+                <code><span class="command-prefix">irm </span><span class="command-url">https://engiware.org/install.ps1</span><span class="command-prefix"> | iex</span></code>
+                <span class="copy-label">advanced</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="section context-flow" aria-label="EngiWare context flow">
+            <figure class="context-diagram" data-context-diagram>
+              <svg class="context-beams" data-context-beams aria-hidden="true"></svg>
+
+              <div class="context-diagram-grid">
+                <div class="context-zone context-zone-plant">
+                  <span class="context-zone-title">PLANT INFORMATION</span>
+                  <div class="context-nodes context-nodes-plant">
+                    <div class="context-node" data-flow-node data-flow-side="plant">
+                      <span class="context-node-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+                          <path d="M4 3v18M20 3v18M4 7h4m4 0h8M8 5v4m4-4v4M4 13h6m4 0h6M10 11v4m4-4v4M4 19h5m6 0h5" />
+                        </svg>
+                      </span>
+                      <span class="context-node-copy"><strong>PLANT LOGIC</strong><small>PLC programs and routines</small></span>
+                    </div>
+
+                    <div class="context-node" data-flow-node data-flow-side="plant">
+                      <span class="context-node-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+                          <rect x="3" y="4" width="18" height="13" rx="1" />
+                          <path d="m6 12 3-3 3 4 3-6 3 3M9 21h6M12 17v4" />
+                        </svg>
+                      </span>
+                      <span class="context-node-copy"><strong>DISPLAY + CONTROL</strong><small>HMI, SCADA, alarms</small></span>
+                    </div>
+
+                    <div class="context-node" data-flow-node data-flow-side="plant">
+                      <span class="context-node-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square">
+                          <rect x="6" y="5" width="12" height="14" rx="1" />
+                          <path d="M9 2v3m3-3v3m3-3v3M9 19v3m3-3v3m3-3v3M3 8h3m-3 4h3m-3 4h3m12-8h3m-3 4h3m-3 4h3M9 9h6v6H9z" />
+                        </svg>
+                      </span>
+                      <span class="context-node-copy"><strong>PLANT HARDWARE</strong><small>Devices, I/O, networks</small></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="context-machine" data-context-core>
+                  <span class="context-machine-eyebrow">ENGIWARE</span>
+                  <span class="context-machine-logo"><img src="/logo.png" width="763" height="406" alt="" /></span>
+                  <span class="context-machine-name">CONTEXT MACHINE</span>
+                </div>
+
+                <div class="context-zone context-zone-models">
+                  <span class="context-zone-title">MODEL PROVIDERS</span>
+                  <div class="context-nodes context-nodes-models">
+                    <div class="context-node provider-anthropic" data-flow-node data-flow-side="model">
+                      <span class="context-node-icon" aria-hidden="true">
+                        <img src="/providers/anthropic.svg" alt="" />
+                      </span>
+                      <span class="context-node-copy"><strong>CLAUDE</strong><small>Anthropic</small></span>
+                    </div>
+
+                    <div class="context-node provider-openai" data-flow-node data-flow-side="model">
+                      <span class="context-node-icon" aria-hidden="true">
+                        <img src="/providers/openai.svg" alt="" />
+                      </span>
+                      <span class="context-node-copy"><strong>GPT</strong><small>OpenAI</small></span>
+                    </div>
+
+                    <div class="context-node provider-xai" data-flow-node data-flow-side="model">
+                      <span class="context-node-icon" aria-hidden="true">
+                        <img src="/providers/xai.svg" alt="" />
+                      </span>
+                      <span class="context-node-copy"><strong>GROK</strong><small>xAI</small></span>
+                    </div>
+
+                    <div class="context-node provider-gemini" data-flow-node data-flow-side="model">
+                      <span class="context-node-icon" aria-hidden="true">
+                        <img src="/providers/gemini.svg" alt="" />
+                      </span>
+                      <span class="context-node-copy"><strong>GEMINI</strong><small>Google</small></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </figure>
+        </section>
+
+        <section class="section what" aria-labelledby="what-title">
+          <div class="section-inner">
+            <h2 id="what-title">What is EngiWare?</h2>
+            <p class="section-intro">
+              EngiWare is an AI agent that helps engineers inspect, understand, and work with automation systems from the terminal.
+            </p>
+            <ul class="feature-list">
+              <li>
+                <span class="marker">[*]</span>
+                <strong>OpenCode</strong>
+                <span class="feature-description">Built on top of OpenCode</span>
+              </li>
+              <li>
+                <span class="marker">[*]</span>
+                <strong>Engineer focused</strong>
+                <span class="feature-description">Automation, controls, and electrical-based workflows</span>
+              </li>
+              <li>
+                <span class="marker">[*]</span>
+                <strong>Log tracking</strong>
+                <span class="feature-description">Keep track of the changes the agent makes</span>
+              </li>
+              <li>
+                <span class="marker">[*]</span>
+                <strong>Any model</strong>
+                <span class="feature-description">75+ LLM providers through Models.dev, including local models</span>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="section privacy" aria-labelledby="privacy-title">
+          <div class="section-inner">
+            <h2 id="privacy-title">Built for privacy first</h2>
+            <div class="privacy-copy">
+              <span class="marker">[*]</span>
+              <p>
+                EngiWare does not store any of your code or context data, so that it can operate in privacy sensitive environments.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section faq" aria-labelledby="faq-title">
+          <div class="section-inner">
+            <h2 id="faq-title">FAQ</h2>
+
+            <details>
+              <summary>What is EngiWare?</summary>
+              <p class="answer">
+                EngiWare is an AI agent that helps you write and run engineering code with any AI model. It is available as a terminal-based interface on Linux and Windows through WSL2 and Winghostty.
+              </p>
+            </details>
+            <details>
+              <summary>How do I use EngiWare?</summary>
+              <p class="answer">Run the install command above, then launch <code>engicode</code> from your terminal.</p>
+            </details>
+            <details>
+              <summary>Do I need extra AI subscriptions to use EngiWare?</summary>
+              <p class="answer">
+                Not necessarily, EngiWare comes with a set of free models that you can use without creating an account. Aside from these, you can use any of the popular coding models by creating a Zen account. While we encourage users to use Zen, EngiWare also works with all popular providers such as OpenAI, Anthropic, xAI, and others. You can even connect your local models.
+              </p>
+            </details>
+            <details>
+              <summary>Can I use my existing AI subscriptions with EngiWare?</summary>
+              <p class="answer">
+                Yes, EngiWare supports subscription plans from all major providers. You can use your Claude Pro/Max, ChatGPT Plus/Pro, or GitHub Copilot subscriptions.
+              </p>
+            </details>
+            <details>
+              <summary>Can I only use EngiWare in the terminal?</summary>
+              <p class="answer">
+                EngiWare is currently designed around its terminal interface. On Windows, it runs in Winghostty through Ubuntu on WSL2.
+              </p>
+            </details>
+            <details>
+              <summary>How much does EngiWare cost?</summary>
+              <p class="answer">
+                EngiWare is 100% free to use. It also comes with a set of free models. There might be additional costs if you connect any other provider.
+              </p>
+            </details>
+            <details>
+              <summary>What about data and privacy?</summary>
+              <p class="answer">
+                Your data and information is only stored when you use hosted free models or create shareable links.
+              </p>
+            </details>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <p>EngiWare is built on OpenCode by Green Pipe Partners.</p>
+        <div class="footer-links">
+          <a href="https://github.com/GreenPipePartners/ENGIWARE">GitHub</a>
+          <a href="/legal/privacy-policy">Privacy</a>
+          <a href="/legal/terms-of-service">Terms</a>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      const tabs = Array.from(document.querySelectorAll("[role=tab]"))
+      const panels = Array.from(document.querySelectorAll("[role=tabpanel]"))
+      const menuToggle = document.querySelector(".menu-toggle")
+      const siteMenu = document.querySelector("#site-menu")
+
+      menuToggle.addEventListener("click", () => {
+        const open = menuToggle.getAttribute("aria-expanded") !== "true"
+        menuToggle.setAttribute("aria-expanded", String(open))
+        menuToggle.setAttribute("aria-label", open ? "Close navigation" : "Open navigation")
+        if (open) siteMenu.dataset.open = "true"
+        else delete siteMenu.dataset.open
+      })
+
+      for (const link of siteMenu.querySelectorAll("a")) {
+        link.addEventListener("click", () => {
+          menuToggle.setAttribute("aria-expanded", "false")
+          menuToggle.setAttribute("aria-label", "Open navigation")
+          delete siteMenu.dataset.open
+        })
+      }
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return
+        menuToggle.setAttribute("aria-expanded", "false")
+        menuToggle.setAttribute("aria-label", "Open navigation")
+        delete siteMenu.dataset.open
+      })
+
+      for (const tab of tabs) {
+        tab.addEventListener("click", () => {
+          for (const item of tabs) item.setAttribute("aria-selected", String(item === tab))
+          for (const panel of panels) panel.hidden = panel.id !== tab.getAttribute("aria-controls")
+        })
+      }
+
+      if (navigator.userAgent.includes("Windows")) document.querySelector("#tab-powershell").click()
+
+      for (const command of document.querySelectorAll("[data-command]")) {
+        command.addEventListener("click", async () => {
+          const label = command.querySelector(".copy-label")
+          const original = label.textContent
+          await navigator.clipboard.writeText(command.dataset.command)
+          command.dataset.copied = "true"
+          label.textContent = "copied"
+          window.setTimeout(() => {
+            delete command.dataset.copied
+            label.textContent = original
+          }, 1600)
+        })
+      }
+
+      const contextDiagram = document.querySelector("[data-context-diagram]")
+      if (contextDiagram) {
+        const contextSvg = contextDiagram.querySelector("[data-context-beams]")
+        const contextCore = contextDiagram.querySelector("[data-context-core]")
+        const contextNodes = Array.from(contextDiagram.querySelectorAll("[data-flow-node]"))
+        const svgNamespace = "http://www.w3.org/2000/svg"
+
+        const beams = contextNodes.map((node, index) => {
+          const path = document.createElementNS(svgNamespace, "path")
+          const id = `context-beam-${index}`
+          path.id = id
+          path.classList.add("context-beam-line")
+          contextSvg.append(path)
+
+          for (const reverse of [false, true]) {
+            const pulse = document.createElementNS(svgNamespace, "circle")
+            pulse.classList.add("context-beam-pulse")
+            if (reverse) pulse.classList.add("context-beam-pulse-return")
+            pulse.setAttribute("r", reverse ? "2.1" : "2.8")
+
+            const motion = document.createElementNS(svgNamespace, "animateMotion")
+            motion.setAttribute("dur", reverse ? `${4.1 + index * 0.08}s` : `${3.25 + index * 0.07}s`)
+            motion.setAttribute("begin", `${index * 0.22 + (reverse ? 0.9 : 0)}s`)
+            motion.setAttribute("repeatCount", "indefinite")
+            motion.setAttribute("calcMode", "linear")
+            motion.setAttribute("keyTimes", "0;1")
+            motion.setAttribute("keyPoints", reverse ? "1;0" : "0;1")
+
+            const motionPath = document.createElementNS(svgNamespace, "mpath")
+            motionPath.setAttribute("href", `#${id}`)
+            motion.append(motionPath)
+            pulse.append(motion)
+            contextSvg.append(pulse)
+          }
+
+          return { node, path }
+        })
+
+        const layoutContextBeams = () => {
+          const frame = contextDiagram.getBoundingClientRect()
+          const core = contextCore.getBoundingClientRect()
+          const vertical = window.matchMedia("(max-width: 760px)").matches
+          contextSvg.setAttribute("viewBox", `0 0 ${frame.width} ${frame.height}`)
+
+          for (const beam of beams) {
+            const target = beam.node.getBoundingClientRect()
+            const plant = beam.node.dataset.flowSide === "plant"
+            if (vertical) {
+              const startX = target.left + target.width / 2 - frame.left
+              const startY = plant ? target.bottom - frame.top : core.bottom - frame.top
+              const endX = plant ? core.left + core.width / 2 - frame.left : target.left + target.width / 2 - frame.left
+              const endY = plant ? core.top - frame.top : target.top - frame.top
+              const bend = Math.max(36, Math.abs(endY - startY) * 0.46)
+              beam.path.setAttribute("d", `M ${startX} ${startY} C ${startX} ${startY + bend} ${endX} ${endY - bend} ${endX} ${endY}`)
+              continue
+            }
+
+            const startX = plant ? target.right - frame.left : core.right - frame.left
+            const startY = plant ? target.top + target.height / 2 - frame.top : core.top + core.height / 2 - frame.top
+            const endX = plant ? core.left - frame.left : target.left - frame.left
+            const endY = plant ? core.top + core.height / 2 - frame.top : target.top + target.height / 2 - frame.top
+            const bend = Math.max(42, Math.abs(endX - startX) * 0.5)
+            beam.path.setAttribute("d", `M ${startX} ${startY} C ${startX + bend} ${startY} ${endX - bend} ${endY} ${endX} ${endY}`)
+          }
+        }
+
+        const beamObserver = new ResizeObserver(layoutContextBeams)
+        beamObserver.observe(contextDiagram)
+        layoutContextBeams()
+      }
+    </script>
+  </body>
+</html>
