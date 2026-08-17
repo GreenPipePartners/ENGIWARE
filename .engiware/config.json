@@ -1,0 +1,10 @@
+{
+  "keybinds": {
+    "dividerUp": "ctrl+up",
+    "dividerDown": "ctrl+down"
+  },
+  "layout": {
+    "workspacePercent": 75,
+    "dividerStep": 5
+  }
+}

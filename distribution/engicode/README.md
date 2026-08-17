@@ -26,6 +26,49 @@ By default, root installs under `/usr/local`; other users install under `$HOME/.
 come from `https://engiware.org/releases` unless `ENGICODE_REPOSITORY` or
 `ENGICODE_RELEASE_BASE_URL` points to another release host.
 
+## Project Prompt Journals
+
+After an engineering source is loaded, Engiware records each admitted prompt in one UTC-dated
+Markdown file beside that source:
+
+```text
+Logs/
+└── Prompts/
+    └── 2026-08-16.md
+```
+
+Each entry records the prompt, first assistant response, final assistant response, session and
+prompt identities, and the provider/model used for the initial and final responses. Engiware owns
+only the marked entry blocks and preserves other text in the daily file. The dated files appear as
+selectable nodes at the bottom of the engineering project tree.
+
+Engibook remains the immutable snapshot/review boundary. Prompt journals are mutable project
+context that can be included in a later Engibook snapshot; loading an L5X does not automatically
+create an Engibook.
+
+## Engiware Configuration
+
+Engiware loads configuration from `~/.config/engiware/config.json`, then the loaded engineering
+project's `.engiware/config.json`, then the file named by `ENGIWARE_CONFIG`. Later sources override
+earlier ones. Divider defaults are:
+
+```json
+{
+  "keybinds": {
+    "dividerUp": "ctrl+up",
+    "dividerDown": "ctrl+down"
+  },
+  "layout": {
+    "workspacePercent": 75,
+    "dividerStep": 5
+  }
+}
+```
+
+`dividerUp` moves the workspace/prompt divider upward and gives the prompt area more room;
+`dividerDown` moves it downward. The workspace is clamped between 30% and 80% of the available
+height.
+
 ## Windows, Winghostty, And PowerShell
 
 The supported Windows runtime is Ubuntu 24.04 under WSL2, displayed through

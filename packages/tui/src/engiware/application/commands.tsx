@@ -13,7 +13,7 @@ export const ENGIWARE_APPLICATIONS = [
   { command: "opencode", name: "OpenCode", detail: "Expand the general coding interface" },
 ] as const
 
-export function EngiwareCommands(props: { baseDirectory: string }) {
+export function EngiwareCommands(props: { baseDirectory: string; sessionID?: string }) {
   const controller = useEngiwareApplication()
 
   Keymap.createLayer(() => ({
@@ -38,10 +38,10 @@ export function EngiwareCommands(props: { baseDirectory: string }) {
             return
           }
           if (argument) {
-            await controller.actions.loadEngibook(resolveSource(argument, props.baseDirectory))
+            await controller.actions.loadEngibook(resolveSource(argument, props.baseDirectory), props.sessionID)
             return
           }
-          await controller.actions.openEngibook()
+          await controller.actions.openEngibook(props.sessionID)
         },
       },
       {
@@ -63,10 +63,10 @@ export function EngiwareCommands(props: { baseDirectory: string }) {
             return
           }
           if (argument && action !== "summary" && action !== "detail") {
-            await controller.actions.importPlc(resolveSource(argument, props.baseDirectory))
+            await controller.actions.importPlc(resolveSource(argument, props.baseDirectory), props.sessionID)
             return
           }
-          await controller.actions.openPlc()
+          await controller.actions.openPlc(props.sessionID)
           if (action === "summary" || action === "detail") await controller.actions.setMode(action)
         },
       },
@@ -89,10 +89,10 @@ export function EngiwareCommands(props: { baseDirectory: string }) {
             return
           }
           if (argument && action !== "source" && action !== "structure") {
-            await controller.actions.importIgnition(resolveSource(argument, props.baseDirectory))
+            await controller.actions.importIgnition(resolveSource(argument, props.baseDirectory), props.sessionID)
             return
           }
-          await controller.actions.openIgnition()
+          await controller.actions.openIgnition(props.sessionID)
           if (action === "source" || action === "structure") await controller.actions.setIgnitionMode(action)
         },
       },
@@ -111,7 +111,7 @@ export function EngiwareCommands(props: { baseDirectory: string }) {
         palette: true,
         slash: { name: "summary", aliases: ["plc-summary"], arguments: true },
         run: async () => {
-          await controller.actions.openPlc()
+          await controller.actions.openPlc(props.sessionID)
           await controller.actions.setMode("summary")
         },
       },
@@ -122,7 +122,7 @@ export function EngiwareCommands(props: { baseDirectory: string }) {
         palette: true,
         slash: { name: "detail", aliases: ["plc-detail"], arguments: true },
         run: async () => {
-          await controller.actions.openPlc()
+          await controller.actions.openPlc(props.sessionID)
           await controller.actions.setMode("detail")
         },
       },
@@ -133,7 +133,7 @@ export function EngiwareCommands(props: { baseDirectory: string }) {
         palette: true,
         slash: { name: "structure", aliases: ["ignition-structure"], arguments: true },
         run: async () => {
-          await controller.actions.openIgnition()
+          await controller.actions.openIgnition(props.sessionID)
           await controller.actions.setIgnitionMode("structure")
         },
       },
@@ -144,7 +144,7 @@ export function EngiwareCommands(props: { baseDirectory: string }) {
         palette: true,
         slash: { name: "source", aliases: ["ignition-source"], arguments: true },
         run: async () => {
-          await controller.actions.openIgnition()
+          await controller.actions.openIgnition(props.sessionID)
           await controller.actions.setIgnitionMode("source")
         },
       },

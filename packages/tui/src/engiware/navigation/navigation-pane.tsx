@@ -4,6 +4,7 @@ import { useEngiwareApplication } from "../application/provider"
 import type { EngiwareCatalogNode } from "../domain/client"
 import { flattenNavigationTree, type NavigationTreeRow } from "./tree"
 import { NavigationTreeView } from "./tree-view"
+import { promptJournalDate } from "../journal/project-tree"
 
 export function NavigationPane(props: {
   readonly onActivate: EngiwareTargetActivation
@@ -15,6 +16,10 @@ export function NavigationPane(props: {
   const activate = (row: NavigationTreeRow) => {
     const node = findCatalogNode(nodes(), row.node.id)
     if (!node) return
+    if (node.target && promptJournalDate(node.target.id)) {
+      void controller.actions.openPromptJournal(node.id, node.target.id)
+      return
+    }
     if (node.children?.length) {
       controller.actions.setNavigationExpanded(node.id, !controller.model.expandedNavigationIDs.has(node.id))
       if (node.target) void props.onActivate(node.id, node.target)

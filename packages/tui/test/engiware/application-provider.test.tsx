@@ -1,6 +1,9 @@
 /** @jsxImportSource @opentui/solid */
 import { expect, test } from "bun:test"
 import { testRender } from "@opentui/solid"
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import path from "node:path"
 import type { EngiwareController } from "../../src/engiware/application/contracts"
 import { EngiwareApplicationProvider, useEngiwareApplication } from "../../src/engiware/application/provider"
 import {
@@ -169,11 +172,12 @@ test("imports an absolute L5X path from a natural-language load request", async 
   await app.waitForFrame((frame) => frame.includes("pending"))
 
   const source = "/home/bobby/Projects/99013-ME-Program_Recovery/converted/rockwell/plc/applicator/Applicator.L5X"
-  current().actions.observePrompt(`I want to load ${source}`)
+  current().actions.observePrompt(`I want to load ${source}`, "ses_applicator")
   await app.waitForFrame((frame) => frame.includes("imported"))
   expect(fake.calls.order).toEqual(["hello", "import"])
   expect(fake.calls.imports).toEqual([source])
   expect(current().model.view).toBe("plc")
+  expect(current().model.promptJournalProjects.ses_applicator?.at(-1)?.source).toBe(source)
   app.renderer.destroy()
 })
 
@@ -199,6 +203,136 @@ test("imports an L5X source into a new PLC session", async () => {
   app.renderer.destroy()
 })
 
+test("opens a dated project prompt journal as Markdown source", async () => {
+  observed = undefined
+  const root = await mkdtemp(path.join(tmpdir(), "engiware-provider-journal-test-"))
+  const source = path.join(root, "Applicator.L5X")
+  const journal = path.join(root, "Logs", "Prompts", "2026-08-16.md")
+  await mkdir(path.dirname(journal), { recursive: true })
+  await writeFile(source, "fixture")
+  await writeFile(journal, "# Prompt Journal\n\nApplicator response")
+  const fake = createFakeEngiwareClient()
+  const app = await testRender(() => (
+    <EngiwareApplicationProvider client={fake.client}>
+      <Probe />
+    </EngiwareApplicationProvider>
+  ))
+  app.renderer.start()
+  await app.waitForFrame((frame) => frame.includes("pending"))
+  await current().actions.importPlc(source)
+  const navigation = current().model.navigation
+  expect(navigation.kind === "ready" ? JSON.stringify(navigation.data) : "").toContain("2026-08-16")
+  await current().actions.openPromptJournal(
+    "engiware:controller:logs:prompts:2026-08-16",
+    "engiware:prompt-journal:2026-08-16",
+  )
+  expect(displayMarker(current().model.display)).toBe("2026-08-16.md")
+  const display = current().model.display
+  expect(display.kind === "ready" && display.data.coordinateSystem === "source-v1" ? display.data.text : "").toContain(
+    "Applicator response",
+  )
+  app.renderer.destroy()
+  await rm(root, { recursive: true, force: true })
+})
+
+test("does not let journal navigation invalidate a replacement import", async () => {
+  observed = undefined
+  const root = await mkdtemp(path.join(tmpdir(), "engiware-provider-journal-race-test-"))
+  const sourceA = path.join(root, "A.L5X")
+  const sourceB = path.join(root, "B.L5X")
+  const journal = path.join(root, "Logs", "Prompts", "2026-08-16.md")
+  await mkdir(path.dirname(journal), { recursive: true })
+  await writeFile(sourceA, "fixture")
+  await writeFile(sourceB, "fixture")
+  await writeFile(journal, "# Prompt Journal")
+  const imported = Promise.withResolvers<ReturnType<typeof openResult>>()
+  const fake = createFakeEngiwareClient({
+    importL5x: async (source) =>
+      source === sourceA ? openResult({ projection: projection("source-a") }) : imported.promise,
+  })
+  const app = await testRender(() => (
+    <EngiwareApplicationProvider client={fake.client}>
+      <Probe />
+    </EngiwareApplicationProvider>
+  ))
+  app.renderer.start()
+  await app.waitForFrame((frame) => frame.includes("pending"))
+  await current().actions.importPlc(sourceA)
+
+  const importing = current().actions.importPlc(sourceB)
+  await app.flush()
+  await current().actions.openPromptJournal(
+    "engiware:controller:logs:prompts:2026-08-16",
+    "engiware:prompt-journal:2026-08-16",
+  )
+  imported.resolve(openResult({ projection: projection("source-b") }))
+  await importing
+  await app.waitForFrame((frame) => frame.includes("source-b"))
+
+  expect(firstRowID(current().model.display)).toBe("source-b")
+  app.renderer.destroy()
+  await rm(root, { recursive: true, force: true })
+})
+
+test("associates a Home project with its created session and clears ownership on an application switch", async () => {
+  observed = undefined
+  const plc = createFakeEngiwareClient()
+  const ignition = createFakeIgnitionClient()
+  const app = await testRender(() => (
+    <EngiwareApplicationProvider client={plc.client} ignitionClient={ignition.client}>
+      <Probe />
+    </EngiwareApplicationProvider>
+  ))
+  app.renderer.start()
+  await app.waitForFrame((frame) => frame.includes("pending"))
+  const source = "/project/A.L5X"
+  await current().actions.importPlc(source)
+  current().actions.observePrompt("Explain the active project", "ses_home")
+  expect(current().model.promptJournalProjects.ses_home?.at(-1)?.source).toBe(source)
+
+  const replacement = "/project/B.L5X"
+  await current().actions.importPlc(replacement, "ses_other")
+  current().actions.observePrompt("Explain the now-visible project", "ses_home")
+  expect(current().model.promptJournalProjects.ses_home?.at(-1)?.source).toBe(replacement)
+
+  await current().actions.openIgnition("ses_home")
+  expect(current().model.promptJournalProjects.ses_home?.at(-1)?.source).toBeUndefined()
+  expect(current().model.projectSource).toBeUndefined()
+  app.renderer.destroy()
+})
+
+test("disassociates the previous project before a natural-language replacement import", async () => {
+  observed = undefined
+  const replacement = Promise.withResolvers<ReturnType<typeof openResult>>()
+  const sourceA = "/project/A.L5X"
+  const sourceB = "/project/B.L5X"
+  const fake = createFakeEngiwareClient({
+    importL5x: (source) => (source === sourceA ? Promise.resolve(openResult()) : replacement.promise),
+  })
+  const app = await testRender(() => (
+    <EngiwareApplicationProvider client={fake.client}>
+      <Probe />
+    </EngiwareApplicationProvider>
+  ))
+  app.renderer.start()
+  await app.waitForFrame((frame) => frame.includes("pending"))
+  await current().actions.importPlc(sourceA, "ses_home")
+  const projectA = current().model.promptJournalProjects.ses_home?.at(-1)
+  expect(projectA).toBeDefined()
+  current().actions.observePromptAdmission("ses_home", "msg_queued_a", projectA!.since)
+
+  current().actions.observePrompt(`Load ${sourceB}`, "ses_home")
+  expect(current().model.promptJournalProjects.ses_home?.map((project) => project.source)).toEqual([sourceA, undefined])
+  expect(current().model.promptJournalProjects.ses_home?.[0]?.until).toBe(
+    current().model.promptJournalProjects.ses_home?.[1]?.since,
+  )
+  replacement.resolve(openResult({ projection: projection("source-b") }))
+  await app.waitForFrame((frame) => frame.includes("source-b"))
+  expect(current().model.promptJournalProjects.ses_home?.map((project) => project.source)).toEqual([sourceA, sourceB])
+  expect(current().model.promptJournalAdmissions.ses_home?.msg_queued_a?.projectID).toBe(projectA!.id)
+  app.renderer.destroy()
+})
+
 test("preserves the active projection when an L5X import fails", async () => {
   observed = undefined
   const fake = createFakeEngiwareClient({ importL5x: async () => Promise.reject(new Error("invalid L5X")) })
@@ -215,6 +349,34 @@ test("preserves the active projection when an L5X import fails", async () => {
   const display = current().model.display
   expect(firstRowID(display)).toBe("main")
   expect(current().model.projectionError).toBe("invalid L5X")
+  app.renderer.destroy()
+})
+
+test("retains the visible project when a session replacement import fails", async () => {
+  observed = undefined
+  const sourceA = "/project/A.L5X"
+  const sourceB = "/project/Invalid.L5X"
+  const fake = createFakeEngiwareClient({
+    importL5x: (source) =>
+      source === sourceA
+        ? Promise.resolve(openResult({ projection: projection("source-a") }))
+        : Promise.reject(new Error("invalid L5X")),
+  })
+  const app = await testRender(() => (
+    <EngiwareApplicationProvider client={fake.client}>
+      <Probe />
+    </EngiwareApplicationProvider>
+  ))
+  app.renderer.start()
+  await app.waitForFrame((frame) => frame.includes("pending"))
+  await current().actions.importPlc(sourceA, "ses_failure")
+  await current().actions.importPlc(sourceB, "ses_failure")
+
+  expect(current().model.projectSource).toBe(sourceA)
+  expect(current().model.promptJournalProjects.ses_failure?.map((project) => project.source)).toEqual([
+    sourceA,
+    undefined,
+  ])
   app.renderer.destroy()
 })
 

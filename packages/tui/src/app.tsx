@@ -99,6 +99,7 @@ import type {
   EngiwareIgnitionDomainClient,
 } from "./engiware/domain/client"
 import { EngiwareApplicationProvider } from "./engiware/application/provider"
+import { PromptJournalAdmissionRecorder } from "./engiware/journal/prompt-journal"
 
 import { DialogVariant } from "./component/dialog-variant"
 import { win32DisableProcessedInput, win32FlushInputBuffer } from "./terminal-win32"
@@ -396,6 +397,7 @@ export const run = Effect.fn("Tui.run")(function* (input: TuiInput) {
                                                           ignitionClient={input.ignition}
                                                           engibookClient={input.engibook}
                                                         >
+                                                          <PromptJournalAdmissionRecorder />
                                                           <LocalProvider>
                                                             <PromptStashProvider>
                                                               <DialogProvider>

@@ -17,6 +17,18 @@ export type PaneState<Data> =
   | { readonly kind: "error"; readonly message: string }
   | { readonly kind: "ready"; readonly data: Data }
 
+export type PromptJournalProject = {
+  readonly id: number
+  readonly source?: string
+  readonly since: number
+  readonly until?: number
+}
+
+export type PromptJournalAdmission = {
+  readonly projectID: number
+  readonly created: number
+}
+
 export type EngiwareControllerModel = {
   readonly view: "menu" | "plc" | "ignition" | "engibook" | "opencode"
   readonly notice?: string
@@ -33,26 +45,36 @@ export type EngiwareControllerModel = {
   readonly reviewTabs: EngiwareEngibookOpenResult["tabs"]
   readonly activeReviewTabID?: string
   readonly activeModuleID?: string
+  readonly projectSource?: string
+  readonly projectApplication?: "plc" | "ignition" | "engibook"
+  readonly promptJournalSince?: number
+  readonly promptJournalProjects: Readonly<Record<string, readonly PromptJournalProject[] | undefined>>
+  readonly promptJournalAdmissions: Readonly<
+    Record<string, Readonly<Record<string, PromptJournalAdmission | undefined>> | undefined>
+  >
 }
 
 export type EngiwareControllerActions = {
-  readonly openPlc: () => Promise<void>
-  readonly importPlc: (source: string) => Promise<void>
-  readonly openIgnition: () => Promise<void>
-  readonly importIgnition: (source: string) => Promise<void>
-  readonly openEngibook: () => Promise<void>
-  readonly loadEngibook: (path: string) => Promise<void>
+  readonly openPlc: (sessionID?: string) => Promise<void>
+  readonly importPlc: (source: string, sessionID?: string) => Promise<void>
+  readonly openIgnition: (sessionID?: string) => Promise<void>
+  readonly importIgnition: (source: string, sessionID?: string) => Promise<void>
+  readonly openEngibook: (sessionID?: string) => Promise<void>
+  readonly loadEngibook: (path: string, sessionID?: string) => Promise<void>
   readonly showMenu: () => void
   readonly showOpenCode: () => void
   readonly showUnavailable: (name: string) => void
   readonly setContextVisible: (visible: boolean) => void
-  readonly observePrompt: (input: string) => void
+  readonly observePromptAdmission: (sessionID: string, promptID: string, created: number) => void
+  readonly observePrompt: (input: string, sessionID?: string) => void
   readonly selectNavigation: (id: string) => void
   readonly setNavigationExpanded: (id: string, expanded: boolean) => void
   readonly openRoutine: (navigationID: string, target: EngiwareCatalogTarget) => Promise<void>
   readonly openIgnitionResource: (navigationID: string, target: EngiwareCatalogTarget) => Promise<void>
   readonly openEngibookTarget: (navigationID: string, target: EngiwareCatalogTarget) => Promise<void>
   readonly openEngibookTab: (tabID: string) => Promise<void>
+  readonly openPromptJournal: (navigationID: string, targetID: string) => Promise<void>
+  readonly refreshPromptJournals: () => Promise<void>
   readonly moveSelection: (direction: EngiwareSelectionDirection) => Promise<void>
   readonly setMode: (mode: EngiwarePlcProjectionMode) => Promise<void>
   readonly setIgnitionMode: (mode: EngiwareIgnitionProjectionMode) => Promise<void>

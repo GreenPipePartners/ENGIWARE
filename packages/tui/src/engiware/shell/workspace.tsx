@@ -129,11 +129,20 @@ export function EngiwareWorkspaceContainer(props: {
   readonly module: EngiwareWorkspaceModule
   readonly showSidePanes: boolean
   readonly contextVisible: boolean
+  readonly workspacePercent?: number
   readonly onHeaderCommand: (command: string) => void
   readonly onAttachContext?: () => void
 }) {
   return (
-    <box id={props.id} flexDirection="row" flexGrow={3} flexBasis={0} minHeight={0} gap={1} padding={1}>
+    <box
+      id={props.id}
+      flexDirection="row"
+      flexGrow={props.workspacePercent ?? 75}
+      flexBasis={0}
+      minHeight={0}
+      gap={1}
+      padding={1}
+    >
       <Show when={props.showSidePanes}>
         <ProjectTreeContainer>
           {createComponent(props.module.ProjectTree, {

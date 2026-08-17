@@ -142,6 +142,9 @@ Rules:
 - Kept engineering panes non-focusable and moved projection modes to local slash commands.
 - Added clickable Summary/Detail workstation labels and a clickable `/context` header with toggleable Context visibility.
 - Added a collapsed engineering header that lets native OpenCode reclaim the session height.
+- Added configurable workspace/prompt divider movement through Engiware-owned keybindings.
+- Added project-owned UTC daily prompt journals with prompt, first/final response, and model identity.
+- Added selectable `Logs > Prompts > <date>` project-tree artifacts rendered in the workstation.
 - Added responsive behavior that hides Project Tree and Context below 64 columns.
 - Preserved the Flux Deep PLC and OpenCode logos in expanded OpenCode Home mode.
 - Added OpenCode-inspired structural coloring to that logo.

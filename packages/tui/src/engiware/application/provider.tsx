@@ -1,5 +1,7 @@
 import { batch, createContext, onCleanup, useContext, type ParentProps } from "solid-js"
 import { createStore, reconcile } from "solid-js/store"
+import { lstat, readFile, readdir } from "node:fs/promises"
+import path from "node:path"
 import type {
   EngiwareCatalogNode,
   EngiwareDomainClient,
@@ -9,9 +11,18 @@ import type {
   EngiwareIgnitionOpenResult,
   EngiwarePlcOpenResult,
   EngiwareProjection,
+  EngiwareStatus,
 } from "../domain/client"
 import { EngiwareContextRecorderProvider } from "../context/recorder"
-import type { EngiwareController, EngiwareControllerModel, PaneState } from "./contracts"
+import { appendPromptJournals, promptJournalDate } from "../journal/project-tree"
+import { promptJournalPath } from "../journal/prompt-journal"
+import type {
+  EngiwareController,
+  EngiwareControllerModel,
+  PaneState,
+  PromptJournalAdmission,
+  PromptJournalProject,
+} from "./contracts"
 
 const unavailable = "Engiware domain client unavailable"
 const Context = createContext<EngiwareController>()
@@ -42,6 +53,8 @@ export function EngiwareApplicationProvider(
     contextVisible: true,
     expandedNavigationIDs: new Set<string>(),
     reviewTabs: [],
+    promptJournalProjects: {},
+    promptJournalAdmissions: {},
   })
   let generation = 0
   let contextRevision = 0
@@ -54,7 +67,58 @@ export function EngiwareApplicationProvider(
   let engibookOpened = false
   let engibookOpening: Promise<void> | undefined
   let engibookLoading: Promise<void> | undefined
+  let domainNavigation: readonly EngiwareCatalogNode[] = []
+  let domainStatus: EngiwareStatus | undefined
+  let promptJournalDates: readonly string[] = []
+  let promptJournalRevision = 0
   let disposed = false
+
+  const beginPromptJournalProject = (sessionID: string | undefined, source?: string, force = false) => {
+    if (!sessionID) return
+    const projects = model.promptJournalProjects[sessionID] ?? []
+    const active = projects.at(-1)
+    if (!force && active && active.source === source) return active
+    const since = Date.now()
+    const closed =
+      active && active.until === undefined ? [...projects.slice(0, -1), { ...active, until: since }] : projects
+    const project: PromptJournalProject = { id: ++promptJournalRevision, source, since }
+    setModel("promptJournalProjects", { ...model.promptJournalProjects, [sessionID]: [...closed, project] })
+    return project
+  }
+
+  const confirmPromptJournalProject = (
+    sessionID: string | undefined,
+    projectID: number | undefined,
+    source: string,
+  ) => {
+    if (!sessionID || projectID === undefined) return
+    const projects = model.promptJournalProjects[sessionID]
+    if (!projects) return
+    setModel("promptJournalProjects", {
+      ...model.promptJournalProjects,
+      [sessionID]: projects.map((project) => (project.id === projectID ? { ...project, source } : project)),
+    })
+  }
+
+  const associateCurrentPromptJournal = (
+    sessionID: string | undefined,
+    application?: "plc" | "ignition" | "engibook",
+  ) => {
+    if (application && model.projectApplication !== application) return
+    if (!model.projectSource || model.promptJournalSince === undefined) return
+    beginPromptJournalProject(sessionID, model.projectSource)
+  }
+
+  const prepareApplication = (application: "plc" | "ignition" | "engibook", sessionID?: string) => {
+    if (!model.projectApplication || model.projectApplication === application) return
+    promptJournalDates = []
+    batch(() => {
+      setModel("projectApplication", undefined)
+      setModel("projectSource", undefined)
+      setModel("promptJournalSince", undefined)
+      beginPromptJournalProject(sessionID)
+    })
+  }
 
   const setProjection = (projection: EngiwareProjection, replaceContext = true) => {
     batch(() => {
@@ -87,6 +151,7 @@ export function EngiwareApplicationProvider(
     return request().then(
       (projection) => {
         if (disposed || current !== generation || model.view !== application) return
+        if (domainStatus) setModel("source", { kind: "ready", data: domainStatus })
         setProjection(projection, currentContext === contextRevision)
         onSuccess?.()
       },
@@ -107,11 +172,13 @@ export function EngiwareApplicationProvider(
     const active = result.activeTarget
       ? findCatalogNode(result.catalog, (node) => node.target?.id === result.activeTarget!.id)
       : undefined
+    domainNavigation = result.catalog
+    domainStatus = result.status
     batch(() => {
       setModel(
         "navigation",
         result.catalog.length
-          ? { kind: "ready", data: result.catalog }
+          ? { kind: "ready", data: appendPromptJournals(result.catalog, promptJournalDates) }
           : {
               kind: "empty",
               message: engibook
@@ -178,18 +245,19 @@ export function EngiwareApplicationProvider(
     })
   }
 
-  const openPlc = (): Promise<void> => {
+  const openPlc = (sessionID?: string): Promise<void> => {
     const wasActive = model.view === "plc"
     if (!wasActive) generation++
     setModel("view", "plc")
     setModel("notice", undefined)
-    if (importing) return importing.then(openPlc)
+    prepareApplication("plc", sessionID)
+    if (importing) return importing.then(() => openPlc(sessionID))
     if (!props.client) {
       setApplicationUnavailable("PLC")
       return Promise.resolve()
     }
     if (opened && wasActive) return Promise.resolve()
-    if (opening) return opening.then(openPlc)
+    if (opening) return opening.then(() => openPlc(sessionID))
     const current = ++generation
     batch(() => {
       setModel("navigation", { kind: "loading", message: "Loading PLC catalog" })
@@ -224,10 +292,12 @@ export function EngiwareApplicationProvider(
     return pending
   }
 
-  const performImport = (source: string) => {
+  const performImport = (source: string, sessionID: string | undefined, project: PromptJournalProject | undefined) => {
+    const promptJournalSince = project?.since ?? Date.now()
     if (model.view !== "plc") generation++
     setModel("view", "plc")
     setModel("notice", undefined)
+    prepareApplication("plc", sessionID)
     if (!props.client) {
       setApplicationUnavailable("PLC")
       return Promise.resolve()
@@ -249,10 +319,15 @@ export function EngiwareApplicationProvider(
       .hello()
       .then(() => props.client!.plc.importL5x(source))
       .then(
-        (result) => {
+        async (result) => {
           if (disposed || current !== generation || model.view !== "plc") return
           opened = true
+          setModel("projectApplication", "plc")
+          setModel("projectSource", source)
+          setModel("promptJournalSince", promptJournalSince)
+          confirmPromptJournalProject(sessionID, project?.id, source)
           applyOpenResult(result, "plc")
+          await refreshPromptJournals()
         },
         (cause) => {
           if (disposed || current !== generation || model.view !== "plc") return
@@ -271,10 +346,14 @@ export function EngiwareApplicationProvider(
       )
   }
 
-  const importPlc = (source: string): Promise<void> => {
-    if (opening) return opening.then(() => importPlc(source))
-    if (importing) return importing.then(() => importPlc(source))
-    const pending = performImport(source)
+  const enqueuePlcImport = (
+    source: string,
+    sessionID: string | undefined,
+    project: PromptJournalProject | undefined,
+  ): Promise<void> => {
+    if (opening) return opening.then(() => enqueuePlcImport(source, sessionID, project))
+    if (importing) return importing.then(() => enqueuePlcImport(source, sessionID, project))
+    const pending = performImport(source, sessionID, project)
     importing = pending
     void pending.then(
       () => {
@@ -287,18 +366,83 @@ export function EngiwareApplicationProvider(
     return pending
   }
 
-  const openIgnition = (): Promise<void> => {
+  const importPlc = (source: string, sessionID?: string) =>
+    enqueuePlcImport(source, sessionID, beginPromptJournalProject(sessionID, undefined, true))
+
+  const refreshPromptJournals = async () => {
+    const source = model.projectSource
+    if (!source) return
+    const directory = path.join(path.dirname(source), "Logs", "Prompts")
+    const entries = await readdir(directory, { withFileTypes: true }).catch(() => [])
+    const dates = entries
+      .filter((entry) => entry.isFile() && /^\d{4}-\d{2}-\d{2}\.md$/.test(entry.name))
+      .map((entry) => entry.name.slice(0, -3))
+      .toSorted((left, right) => right.localeCompare(left))
+    if (disposed || model.projectSource !== source) return
+    promptJournalDates = dates
+    if (domainNavigation.length)
+      setModel("navigation", { kind: "ready", data: appendPromptJournals(domainNavigation, dates) })
+  }
+
+  const openPromptJournal = async (navigationID: string, targetID: string) => {
+    if (importing || ignitionImporting || engibookLoading) return
+    const day = promptJournalDate(targetID)
+    const source = model.projectSource
+    if (!day || !source) return
+    const current = ++generation
+    setModel("projectionPending", true)
+    setModel("projectionError", undefined)
+    const file = promptJournalPath(source, day)
+    const document = await lstat(file)
+      .then((info) => {
+        if (!info.isFile()) throw new Error(`Prompt journal is not a regular file: ${file}`)
+        return readFile(file, "utf8")
+      })
+      .then(
+        (text) => ({ text }),
+        (cause) => ({ error: errorMessage(cause) }),
+      )
+    if (disposed || current !== generation || model.projectSource !== source) return
+    if ("error" in document) {
+      setModel("projectionPending", false)
+      setModel("projectionError", document.error)
+      return
+    }
+    setProjection({
+      coordinateSystem: "source-v1",
+      mode: "source",
+      target: { navigationId: navigationID },
+      displayName: `${day}.md`,
+      mediaType: "text/markdown",
+      languageId: "markdown",
+      text: document.text,
+      context: [
+        {
+          title: "Project Prompt Journal",
+          entries: [
+            { label: "Date", value: day },
+            { label: "Path", value: file },
+          ],
+        },
+      ],
+      status: { items: [{ label: "Artifact", value: file }] },
+    })
+    setModel("source", { kind: "ready", data: { items: [{ label: "Prompt Journal", value: file }] } })
+  }
+
+  const openIgnition = (sessionID?: string): Promise<void> => {
     const wasActive = model.view === "ignition"
     if (!wasActive) generation++
     setModel("view", "ignition")
     setModel("notice", undefined)
-    if (ignitionImporting) return ignitionImporting.then(openIgnition)
+    prepareApplication("ignition", sessionID)
+    if (ignitionImporting) return ignitionImporting.then(() => openIgnition(sessionID))
     if (!props.ignitionClient) {
       setApplicationUnavailable("Ignition")
       return Promise.resolve()
     }
     if (ignitionOpened && wasActive) return Promise.resolve()
-    if (ignitionOpening) return ignitionOpening.then(openIgnition)
+    if (ignitionOpening) return ignitionOpening.then(() => openIgnition(sessionID))
     const current = ++generation
     batch(() => {
       setModel("navigation", { kind: "loading", message: "Loading Ignition project tree" })
@@ -333,10 +477,16 @@ export function EngiwareApplicationProvider(
     return pending
   }
 
-  const performIgnitionImport = (source: string) => {
+  const performIgnitionImport = (
+    source: string,
+    sessionID: string | undefined,
+    project: PromptJournalProject | undefined,
+  ) => {
+    const promptJournalSince = project?.since ?? Date.now()
     if (model.view !== "ignition") generation++
     setModel("view", "ignition")
     setModel("notice", undefined)
+    prepareApplication("ignition", sessionID)
     if (!props.ignitionClient) {
       setApplicationUnavailable("Ignition")
       return Promise.resolve()
@@ -358,10 +508,15 @@ export function EngiwareApplicationProvider(
       .hello()
       .then(() => props.ignitionClient!.ignition.importProject(source))
       .then(
-        (result) => {
+        async (result) => {
           if (disposed || current !== generation || model.view !== "ignition") return
           ignitionOpened = true
+          setModel("projectApplication", "ignition")
+          setModel("projectSource", source)
+          setModel("promptJournalSince", promptJournalSince)
+          confirmPromptJournalProject(sessionID, project?.id, source)
           applyOpenResult(result, "ignition")
+          await refreshPromptJournals()
         },
         (cause) => {
           if (disposed || current !== generation || model.view !== "ignition") return
@@ -380,10 +535,14 @@ export function EngiwareApplicationProvider(
       )
   }
 
-  const importIgnition = (source: string): Promise<void> => {
-    if (ignitionOpening) return ignitionOpening.then(() => importIgnition(source))
-    if (ignitionImporting) return ignitionImporting.then(() => importIgnition(source))
-    const pending = performIgnitionImport(source)
+  const enqueueIgnitionImport = (
+    source: string,
+    sessionID: string | undefined,
+    project: PromptJournalProject | undefined,
+  ): Promise<void> => {
+    if (ignitionOpening) return ignitionOpening.then(() => enqueueIgnitionImport(source, sessionID, project))
+    if (ignitionImporting) return ignitionImporting.then(() => enqueueIgnitionImport(source, sessionID, project))
+    const pending = performIgnitionImport(source, sessionID, project)
     ignitionImporting = pending
     void pending.then(
       () => {
@@ -396,18 +555,22 @@ export function EngiwareApplicationProvider(
     return pending
   }
 
-  const openEngibook = (): Promise<void> => {
+  const importIgnition = (source: string, sessionID?: string) =>
+    enqueueIgnitionImport(source, sessionID, beginPromptJournalProject(sessionID, undefined, true))
+
+  const openEngibook = (sessionID?: string): Promise<void> => {
     const wasActive = model.view === "engibook"
     if (!wasActive) generation++
     setModel("view", "engibook")
     setModel("notice", undefined)
-    if (engibookLoading) return engibookLoading.then(openEngibook)
+    prepareApplication("engibook", sessionID)
+    if (engibookLoading) return engibookLoading.then(() => openEngibook(sessionID))
     if (!props.engibookClient) {
       setApplicationUnavailable("Engibook")
       return Promise.resolve()
     }
     if (engibookOpened && wasActive) return Promise.resolve()
-    if (engibookOpening) return engibookOpening.then(openEngibook)
+    if (engibookOpening) return engibookOpening.then(() => openEngibook(sessionID))
     const current = ++generation
     batch(() => {
       setModel("navigation", { kind: "loading", message: "Loading Engibook Project Tree" })
@@ -442,10 +605,16 @@ export function EngiwareApplicationProvider(
     return pending
   }
 
-  const performEngibookLoad = (path: string): Promise<void> => {
+  const performEngibookLoad = (
+    path: string,
+    sessionID: string | undefined,
+    project: PromptJournalProject | undefined,
+  ): Promise<void> => {
+    const promptJournalSince = project?.since ?? Date.now()
     if (model.view !== "engibook") generation++
     setModel("view", "engibook")
     setModel("notice", undefined)
+    prepareApplication("engibook", sessionID)
     if (!props.engibookClient) {
       setApplicationUnavailable("Engibook")
       return Promise.resolve()
@@ -467,10 +636,15 @@ export function EngiwareApplicationProvider(
       .hello()
       .then(() => props.engibookClient!.engibook.load(path))
       .then(
-        (result) => {
+        async (result) => {
           if (disposed || current !== generation || model.view !== "engibook") return
           engibookOpened = true
+          setModel("projectApplication", "engibook")
+          setModel("projectSource", path)
+          setModel("promptJournalSince", promptJournalSince)
+          confirmPromptJournalProject(sessionID, project?.id, path)
           applyOpenResult(result, "engibook")
+          await refreshPromptJournals()
         },
         (cause) => {
           if (disposed || current !== generation || model.view !== "engibook") return
@@ -489,10 +663,14 @@ export function EngiwareApplicationProvider(
       )
   }
 
-  const loadEngibook = (path: string): Promise<void> => {
-    if (engibookOpening) return engibookOpening.then(() => loadEngibook(path))
-    if (engibookLoading) return engibookLoading.then(() => loadEngibook(path))
-    const pending = performEngibookLoad(path)
+  const enqueueEngibookLoad = (
+    path: string,
+    sessionID: string | undefined,
+    project: PromptJournalProject | undefined,
+  ): Promise<void> => {
+    if (engibookOpening) return engibookOpening.then(() => enqueueEngibookLoad(path, sessionID, project))
+    if (engibookLoading) return engibookLoading.then(() => enqueueEngibookLoad(path, sessionID, project))
+    const pending = performEngibookLoad(path, sessionID, project)
     engibookLoading = pending
     void pending.then(
       () => {
@@ -504,6 +682,9 @@ export function EngiwareApplicationProvider(
     )
     return pending
   }
+
+  const loadEngibook = (path: string, sessionID?: string) =>
+    enqueueEngibookLoad(path, sessionID, beginPromptJournalProject(sessionID, undefined, true))
 
   const controller: EngiwareController = {
     model,
@@ -532,15 +713,41 @@ export function EngiwareApplicationProvider(
       setContextVisible(visible) {
         setModel("contextVisible", visible)
       },
-      observePrompt(input) {
+      observePromptAdmission(sessionID, promptID, created) {
+        const current = model.promptJournalAdmissions[sessionID] ?? {}
+        if (current[promptID]) return
+        const project = model.promptJournalProjects[sessionID]?.find(
+          (candidate) => created >= candidate.since && created < (candidate.until ?? Number.POSITIVE_INFINITY),
+        )
+        if (!project) return
+        const admission: PromptJournalAdmission = { projectID: project.id, created }
+        setModel("promptJournalAdmissions", {
+          ...model.promptJournalAdmissions,
+          [sessionID]: { ...current, [promptID]: admission },
+        })
+      },
+      observePrompt(input, sessionID) {
         const source = requestedPlcImport(input)
         if (source) {
-          void importPlc(source)
+          void importPlc(source, sessionID)
           return
         }
-        if (requestsPlcWorkspace(input)) void openPlc()
-        if (requestsIgnitionWorkspace(input)) void openIgnition()
-        if (requestsEngibookWorkspace(input)) void openEngibook()
+        if (requestsPlcWorkspace(input)) {
+          associateCurrentPromptJournal(sessionID, "plc")
+          void openPlc(sessionID)
+          return
+        }
+        if (requestsIgnitionWorkspace(input)) {
+          associateCurrentPromptJournal(sessionID, "ignition")
+          void openIgnition(sessionID)
+          return
+        }
+        if (requestsEngibookWorkspace(input)) {
+          associateCurrentPromptJournal(sessionID, "engibook")
+          void openEngibook(sessionID)
+          return
+        }
+        associateCurrentPromptJournal(sessionID)
       },
       selectNavigation(id) {
         contextRevision++
@@ -597,6 +804,8 @@ export function EngiwareApplicationProvider(
           () => setModel("activeReviewTabID", tabID),
         )
       },
+      openPromptJournal,
+      refreshPromptJournals,
       moveSelection(direction) {
         return requestProjection(
           () => props.client!.plc.moveSelection(direction),

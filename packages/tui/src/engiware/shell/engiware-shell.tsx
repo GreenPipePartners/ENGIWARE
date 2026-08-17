@@ -19,6 +19,7 @@ export function EngiwareShell(props: {
   onOpenProject?: (directory: string) => void
   composerDisabled?: boolean
   availableWidth?: number
+  workspacePercent?: number
   onPrepareComposer?: () => void
 }) {
   const controller = useEngiwareApplication()
@@ -92,6 +93,7 @@ export function EngiwareShell(props: {
       module={module}
       showSidePanes={showSidePanes()}
       contextVisible={controller.model.contextVisible}
+      workspacePercent={props.workspacePercent ?? 75}
       onHeaderCommand={injectHeader}
       onAttachContext={attachContext}
     />

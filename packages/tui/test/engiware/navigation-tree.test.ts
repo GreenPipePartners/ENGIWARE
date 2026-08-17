@@ -8,6 +8,8 @@ import {
   toggleNavigationTreeNode,
   type NavigationTreeNode,
 } from "../../src/engiware/navigation/tree"
+import { appendPromptJournals, promptJournalDate } from "../../src/engiware/journal/project-tree"
+import type { EngiwareCatalogNode } from "../../src/engiware/domain/client"
 
 const tree: readonly NavigationTreeNode[] = [
   {
@@ -70,5 +72,36 @@ describe("Engiware navigation tree", () => {
     const expanded = new Set([controller.id])
     expect(toggleNavigationTreeNode(expanded, controller).has(controller.id)).toBe(false)
     expect(toggleNavigationTreeNode(expanded, routine)).toBe(expanded)
+  })
+
+  test("appends dated prompt journals at the bottom of each project tree", () => {
+    const catalog: readonly EngiwareCatalogNode[] = [
+      {
+        id: "controller",
+        label: "Applicator",
+        kind: "controller",
+        children: [{ id: "programs", label: "Programs", kind: "group" }],
+      },
+    ]
+    const augmented = appendPromptJournals(catalog, ["2026-08-17", "2026-08-16"])
+    expect(augmented[0]?.children?.map((node) => node.label)).toEqual(["Programs", "Logs"])
+    const dates = augmented[0]?.children?.at(-1)?.children?.[0]?.children
+    expect(dates?.map((node) => node.label)).toEqual(["2026-08-17", "2026-08-16"])
+    expect(promptJournalDate(dates?.[0]?.target?.id ?? "")).toBe("2026-08-17")
+    expect(catalog[0]?.children?.map((node) => node.label)).toEqual(["Programs"])
+  })
+
+  test("adds one journal tree to module-specific roots without duplicating nested projects", () => {
+    const catalog: readonly EngiwareCatalogNode[] = [
+      {
+        id: "panel",
+        label: "Panel",
+        kind: "panel",
+        children: [{ id: "nested", label: "Nested Project", kind: "project" }],
+      },
+    ]
+    const augmented = appendPromptJournals(catalog, ["2026-08-16"])
+    expect(augmented[0]?.children?.map((node) => node.label)).toEqual(["Nested Project", "Logs"])
+    expect(augmented[0]?.children?.[0]?.children).toBeUndefined()
   })
 })

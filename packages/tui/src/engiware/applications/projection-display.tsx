@@ -4,6 +4,7 @@ import { useTheme } from "../../context/theme"
 import { stringWidth } from "../../util/string-width"
 import { useEngiwareApplication } from "../application/provider"
 import type { EngiwareProjectionPoint, EngiwareProjectionSegment, EngiwareTerminalProjection } from "../domain/client"
+import { SourceDisplay } from "./source-display"
 
 export function ProjectionDisplay(props: {
   application: "plc" | "ignition" | "engibook"
@@ -15,6 +16,10 @@ export function ProjectionDisplay(props: {
   const projection = () => {
     const display = controller.model.display
     return display.kind === "ready" && display.data.coordinateSystem === "terminal-cell-v1" ? display.data : undefined
+  }
+  const source = () => {
+    const display = controller.model.display
+    return display.kind === "ready" && display.data.coordinateSystem === "source-v1" ? display.data : undefined
   }
 
   const revealSelection = () => {
@@ -40,6 +45,9 @@ export function ProjectionDisplay(props: {
   return (
     <box id={`engiware-${props.application}-display`} flexGrow={1} minHeight={0}>
       <Switch>
+        <Match when={source()}>
+          {(current) => <SourceDisplay id={`engiware-${props.application}-source`} projection={current()} />}
+        </Match>
         <Match when={projection()}>
           {(current) => (
             <>

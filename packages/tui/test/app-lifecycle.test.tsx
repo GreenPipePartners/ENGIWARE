@@ -144,6 +144,20 @@ test("session lifecycle updates the terminal title and prints the epilogue after
     expect(frame).toContain("Engineering Workstation")
     expect(frame).toContain("Context")
     expect(frame).toContain("/plc")
+    const workspace = setup.renderer.root.findDescendantById("engiware-shell-dummy")
+    const promptRegion = setup.renderer.root.findDescendantById("engiware-session-region")
+    expect(workspace).toBeDefined()
+    expect(promptRegion).toBeDefined()
+    const workspaceHeight = workspace!.height
+    const promptHeight = promptRegion!.height
+    setup.mockInput.pressArrow("up", { ctrl: true })
+    await Bun.sleep(20)
+    expect(workspace!.height).toBeLessThan(workspaceHeight)
+    expect(promptRegion!.height).toBeGreaterThan(promptHeight)
+    setup.mockInput.pressArrow("down", { ctrl: true })
+    await Bun.sleep(20)
+    expect(workspace!.height).toBe(workspaceHeight)
+    expect(promptRegion!.height).toBe(promptHeight)
     events.emit({
       id: "evt_renamed",
       created: 1,
@@ -156,6 +170,7 @@ test("session lifecycle updates the terminal title and prints the epilogue after
     await task
 
     expect(stdout).toContain("Renamed session")
+    expect(stdout).toContain("█▀▀▀ █▄  █ ▄▀▀▀ ▀█▀")
     expect(stdout).toContain("opencode2 -s dummy")
     expect(promptRequests).toBe(0)
   } finally {

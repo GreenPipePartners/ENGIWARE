@@ -112,7 +112,9 @@ export function Home() {
             ref={bind}
             placeholders={placeholder}
             disabled={forms().length > 0}
-            onSubmit={(input, mode) => mode === "normal" && engiware.actions.observePrompt(input)}
+            onSubmitStart={(input, mode, sessionID) =>
+              mode === "normal" && engiware.actions.observePrompt(input, sessionID)
+            }
           />
         </box>
         <Show

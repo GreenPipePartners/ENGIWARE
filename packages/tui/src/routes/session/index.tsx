@@ -111,6 +111,9 @@ import { SessionLocationMissing } from "./location-missing"
 import { EngiwareShell } from "../../engiware/shell/engiware-shell"
 import { useEngiwareApplication } from "../../engiware/application/provider"
 import { EngiwareCommands } from "../../engiware/application/commands"
+import { defaultEngiwareConfig, loadEngiwareConfig } from "../../engiware/config"
+import { PromptJournalRecorder } from "../../engiware/journal/prompt-journal"
+import { moveWorkspaceDivider } from "../../engiware/shell/layout"
 import { projectName } from "../../util/project"
 
 addDefaultParsers(parsers.parsers)
@@ -179,6 +182,15 @@ export function Session(props: { verticalTabsWidth: number }) {
   const currentLocation = useLocation()
   const engiware = useEngiwareApplication()
   const location = createMemo(() => session()?.location ?? currentLocation.ref)
+  const engiwareConfig = createMemo(() => {
+    const source = engiware.model.promptJournalProjects[route.sessionID]?.at(-1)?.source ?? engiware.model.projectSource
+    return loadEngiwareConfig(source ? path.dirname(source) : (location() ?? data.location.default()).directory)
+  })
+  const [workspacePercent, setWorkspacePercent] = createSignal(defaultEngiwareConfig.layout.workspacePercent)
+  createEffect(() => {
+    const loaded = engiwareConfig()
+    if (loaded) setWorkspacePercent(loaded.layout.workspacePercent)
+  })
   const recentProjects = createMemo(() =>
     data.project
       .list()
@@ -1128,6 +1140,31 @@ export function Session(props: { verticalTabsWidth: number }) {
     bindings: [...baseAndUnfocusedCommands, ...baseCommands()].map((command) => command.id),
   }))
 
+  Keymap.createLayer(() => {
+    const settings = engiwareConfig() ?? defaultEngiwareConfig
+    return {
+      enabled: Boolean(session() && !session()!.parentID && engiware.model.view !== "opencode"),
+      commands: [
+        {
+          bind: settings.keybinds.dividerUp,
+          title: "Move workspace divider up",
+          group: "Engiware",
+          run: () => {
+            setWorkspacePercent((value) => moveWorkspaceDivider(value, "up", settings.layout.dividerStep))
+          },
+        },
+        {
+          bind: settings.keybinds.dividerDown,
+          title: "Move workspace divider down",
+          group: "Engiware",
+          run: () => {
+            setWorkspacePercent((value) => moveWorkspaceDivider(value, "down", settings.layout.dividerStep))
+          },
+        },
+      ],
+    }
+  })
+
   createEffect(
     on(
       () => route.sessionID,
@@ -1157,13 +1194,18 @@ export function Session(props: { verticalTabsWidth: number }) {
       }}
     >
       <box flexGrow={1} minHeight={0}>
-        <EngiwareCommands baseDirectory={location().directory} />
+        <EngiwareCommands
+          baseDirectory={(location() ?? data.location.default()).directory}
+          sessionID={route.sessionID}
+        />
+        <PromptJournalRecorder sessionID={route.sessionID} />
         <Show when={session() && !session()!.parentID}>
           <EngiwareShell
             sessionID={route.sessionID}
             recentProjects={recentProjects()}
             composerDisabled={disabled()}
             availableWidth={availableWidth()}
+            workspacePercent={workspacePercent()}
             onPrepareComposer={() => setComposer("open", false)}
             onOpenProject={(directory) => {
               const target = { directory }
@@ -1173,8 +1215,9 @@ export function Session(props: { verticalTabsWidth: number }) {
           />
         </Show>
         <box
+          id="engiware-session-region"
           flexDirection="row"
-          flexGrow={1}
+          flexGrow={100 - workspacePercent()}
           flexBasis={0}
           minHeight={0}
           border={["top"]}
@@ -1233,81 +1276,83 @@ export function Session(props: { verticalTabsWidth: number }) {
                   </Show>
                 </scrollbox>
               </box>
-            <box height={1} flexShrink={0} flexDirection="row" justifyContent="flex-end">
-              <Show when={config.experimental?.tab_scroll === true && awayFromBottom()}>
-                <text
-                  fg={latestHovered() ? theme.text.default : theme.text.subdued}
-                  onMouseOver={() => setLatestHovered(true)}
-                  onMouseOut={() => setLatestHovered(false)}
-                  onMouseUp={toBottom}
-                >
-                  Latest ↓
-                </text>
-              </Show>
-            </box>
-            <box flexShrink={0}>
-              <Show when={!composer.open && !disabled() && queuedPrompts().length > 0}>
-                <QueuedPromptDock prompts={queuedPrompts()} onOpen={openQueuedPrompts} />
-              </Show>
-              <Slot path="session.composer.top" input={{ sessionID: route.sessionID }} />
-              <Composer
-                sessionID={route.sessionID}
-                open={composer.open || (!!session()?.parentID && forms().length === 0)}
-                defaultTab={composer.tab ?? (session()?.parentID ? "subagents" : undefined)}
-                onClose={() => setComposer("open", false)}
-              />
-              <Switch>
-                <Match when={composer.open || (!!session()?.parentID && forms().length === 0)}>{null}</Match>
-                <Match when={promptedPermissions().length > 0}>
-                  <Show when={promptedPermissions()[0]?.id} keyed>
-                    {(_) => {
-                      const request = promptedPermissions()[0]
-                      return request ? (
-                        <PermissionPrompt request={request} directory={session()?.location.directory} />
-                      ) : null
-                    }}
-                  </Show>
-                </Match>
-                <Match when={forms().length > 0}>
-                  <Show when={forms()[0]?.id} keyed>
-                    {(_) => {
-                      const form = forms()[0]
-                      return form ? <FormPrompt form={form} /> : null
-                    }}
-                  </Show>
-                </Match>
-                <Match
-                  when={
-                    session() &&
-                    currentLocation.error?.location.directory === session()!.location.directory &&
-                    currentLocation.error?.location.workspaceID === session()!.location.workspaceID
-                  }
-                >
-                  <SessionLocationMissing
-                    directory={session()!.location.directory}
-                    projectID={session()!.projectID}
-                    sessionID={route.sessionID}
-                  />
-                </Match>
-                <Match when={!disabled()}>
-                  <Prompt
-                    visible={true}
-                    ref={bind}
-                    disabled={false}
-                    onSubmit={(input, mode) => {
-                      if (mode === "normal") engiware.actions.observePrompt(input)
-                      toBottom()
-                    }}
-                    onEmptySubmit={async () => {
-                      const next = queuedPrompts()[0]
-                      if (!next) return false
-                      return mutatePending("steer", next.id)
-                    }}
-                    sessionID={route.sessionID}
-                  />
-                </Match>
-              </Switch>
-            </box>
+              <box height={1} flexShrink={0} flexDirection="row" justifyContent="flex-end">
+                <Show when={config.experimental?.tab_scroll === true && awayFromBottom()}>
+                  <text
+                    fg={latestHovered() ? theme.text.default : theme.text.subdued}
+                    onMouseOver={() => setLatestHovered(true)}
+                    onMouseOut={() => setLatestHovered(false)}
+                    onMouseUp={toBottom}
+                  >
+                    Latest ↓
+                  </text>
+                </Show>
+              </box>
+              <box flexShrink={0}>
+                <Show when={!composer.open && !disabled() && queuedPrompts().length > 0}>
+                  <QueuedPromptDock prompts={queuedPrompts()} onOpen={openQueuedPrompts} />
+                </Show>
+                <Slot path="session.composer.top" input={{ sessionID: route.sessionID }} />
+                <Composer
+                  sessionID={route.sessionID}
+                  open={composer.open || (!!session()?.parentID && forms().length === 0)}
+                  defaultTab={composer.tab ?? (session()?.parentID ? "subagents" : undefined)}
+                  onClose={() => setComposer("open", false)}
+                />
+                <Switch>
+                  <Match when={composer.open || (!!session()?.parentID && forms().length === 0)}>{null}</Match>
+                  <Match when={promptedPermissions().length > 0}>
+                    <Show when={promptedPermissions()[0]?.id} keyed>
+                      {(_) => {
+                        const request = promptedPermissions()[0]
+                        return request ? (
+                          <PermissionPrompt request={request} directory={session()?.location.directory} />
+                        ) : null
+                      }}
+                    </Show>
+                  </Match>
+                  <Match when={forms().length > 0}>
+                    <Show when={forms()[0]?.id} keyed>
+                      {(_) => {
+                        const form = forms()[0]
+                        return form ? <FormPrompt form={form} /> : null
+                      }}
+                    </Show>
+                  </Match>
+                  <Match
+                    when={
+                      session() &&
+                      currentLocation.error?.location.directory === session()!.location.directory &&
+                      currentLocation.error?.location.workspaceID === session()!.location.workspaceID
+                    }
+                  >
+                    <SessionLocationMissing
+                      directory={session()!.location.directory}
+                      projectID={session()!.projectID}
+                      sessionID={route.sessionID}
+                    />
+                  </Match>
+                  <Match when={!disabled()}>
+                    <Prompt
+                      visible={true}
+                      ref={bind}
+                      disabled={false}
+                      onSubmitStart={(input, mode) => {
+                        if (mode === "normal") engiware.actions.observePrompt(input, route.sessionID)
+                      }}
+                      onSubmit={() => {
+                        toBottom()
+                      }}
+                      onEmptySubmit={async () => {
+                        const next = queuedPrompts()[0]
+                        if (!next) return false
+                        return mutatePending("steer", next.id)
+                      }}
+                      sessionID={route.sessionID}
+                    />
+                  </Match>
+                </Switch>
+              </box>
             </Show>
           </box>
           <Show when={sidebarVisible()}>

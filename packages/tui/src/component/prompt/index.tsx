@@ -77,6 +77,7 @@ export type PromptProps = {
   sessionID?: string
   visible?: boolean
   disabled?: boolean
+  onSubmitStart?: (input: string, mode: "normal" | "shell", sessionID: string) => void
   onSubmit?: (input: string, mode: "normal" | "shell") => void
   onEmptySubmit?: () => boolean | Promise<boolean>
   ref?: (ref: PromptRef | undefined) => void
@@ -1208,6 +1209,7 @@ export function Prompt(props: PromptProps) {
       sessionID = created.id
       session = created
     }
+    props.onSubmitStart?.(inputText, currentMode, sessionID)
 
     if (currentMode === "shell") {
       move.startSubmit()
