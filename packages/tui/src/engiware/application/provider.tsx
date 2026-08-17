@@ -533,6 +533,11 @@ export function EngiwareApplicationProvider(
         setModel("contextVisible", visible)
       },
       observePrompt(input) {
+        const source = requestedPlcImport(input)
+        if (source) {
+          void importPlc(source)
+          return
+        }
         if (requestsPlcWorkspace(input)) void openPlc()
         if (requestsIgnitionWorkspace(input)) void openIgnition()
         if (requestsEngibookWorkspace(input)) void openEngibook()
@@ -689,6 +694,12 @@ function requestsPlcWorkspace(input: string) {
   return /^(?:(?:can|could|would)\s+you\s+)?(?:please\s+)?(?:open|load|show|view|browse)\b.*\b(?:plc|l5x)\b/i.test(
     input.trim(),
   )
+}
+
+function requestedPlcImport(input: string) {
+  if (!/\b(?:open|load|show|view|browse|import)\b/i.test(input)) return
+  const match = input.match(/(?:"([^"\n]+\.l5x)"|'([^'\n]+\.l5x)'|(\/[\w./~-]+\.l5x))\b/i)
+  return match?.slice(1).find((source) => source !== undefined)
 }
 
 function requestsIgnitionWorkspace(input: string) {

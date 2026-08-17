@@ -155,6 +155,28 @@ test("opens PLC for an explicit natural-language open request", async () => {
   app.renderer.destroy()
 })
 
+test("imports an absolute L5X path from a natural-language load request", async () => {
+  observed = undefined
+  const fake = createFakeEngiwareClient({
+    importL5x: async () => openResult({ projection: projection("imported") }),
+  })
+  const app = await testRender(() => (
+    <EngiwareApplicationProvider client={fake.client}>
+      <Probe />
+    </EngiwareApplicationProvider>
+  ))
+  app.renderer.start()
+  await app.waitForFrame((frame) => frame.includes("pending"))
+
+  const source = "/home/bobby/Projects/99013-ME-Program_Recovery/converted/rockwell/plc/applicator/Applicator.L5X"
+  current().actions.observePrompt(`I want to load ${source}`)
+  await app.waitForFrame((frame) => frame.includes("imported"))
+  expect(fake.calls.order).toEqual(["hello", "import"])
+  expect(fake.calls.imports).toEqual([source])
+  expect(current().model.view).toBe("plc")
+  app.renderer.destroy()
+})
+
 test("imports an L5X source into a new PLC session", async () => {
   observed = undefined
   const fake = createFakeEngiwareClient({
